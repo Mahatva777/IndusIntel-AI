@@ -1,0 +1,4 @@
+notification_id,alarm_id,channel,recipient,status,time,message
+NTF_001,ALM_Z3_GAS_CRIT,SMS,W001,SENT,2026-07-15T00:40:05,Critical H2S level detected in Zone 3. Evacuate and don SCBA.
+NTF_002,ALM_Z3_LEL_CRIT,WhatsApp,W001,SENT,2026-07-15T00:42:05,Critical %LEL in basement valve gallery. Initiate gas isolation.
+NTF_003,ALM_Z4_O2_INGRESS,Email,W003,SENT,2026-07-15T00:44:10,O2 ingress detected in tar gas line. Suspend maintenance and evacuate Zone 4.

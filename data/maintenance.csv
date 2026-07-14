@@ -1,0 +1,3 @@
+maintenance_id,equipment_id,zone_id,maintenance_type,priority,status,start_time,end_time,technician,permit_reference
+M001,EQ_Z3_VALVE_GALLERY,3,Routine Inspection,HIGH,IN_PROGRESS,2026-07-15T00:20:00,2026-07-15T00:45:00,W002,P001
+M002,EQ_Z4_TAR_EXTRACTOR,4,Planned Cleaning,MEDIUM,PLANNED,2026-07-15T00:40:00,2026-07-15T01:10:00,W003,P002

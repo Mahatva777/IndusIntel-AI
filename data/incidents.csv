@@ -1,0 +1,3 @@
+incident_id,date,zone_id,equipment_id,root_cause,injury,gas,recommendation,oisd_reference
+INC001,2025-01-05,3,EQ_Z3_VALVE_GALLERY,Flange gasket failure on gas header,Near-miss (no injury),COG with elevated H2S,"Improve gasket specification, add online leak detection, enforce gas test before entry.",OISD-STD-116
+INC002,2024-07-20,4,EQ_Z4_TAR_EXTRACTOR,Blocked flushing liquor strainer causing tar carryover,Minor chemical burn,Tar vapour and NH3,"Increase strainer cleaning frequency, monitor decanter level and differential pressure.",OISD-GDN-192

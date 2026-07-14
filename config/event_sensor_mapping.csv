@@ -1,0 +1,27 @@
+event_profile_id,sensor_type,behavior_profile_id,start_value_rule,target_value_rule,duration_seconds,priority,supports_noise,recovery_profile_id,required_parameters
+EV_NORMAL_PRODUCTION,*,BEH_STABLE,use_normal_mid,use_normal_mid,60,3,YES,BEH_RECOVERY,baseline_value
+EV_GAS_LEAK_MINOR,Toxic Gas (H2S),BEH_EXPONENTIAL_RISE,use_current,normal_max+10,300,2,YES,BEH_RECOVERY,"start_value,target_value,time_constant"
+EV_GAS_LEAK_MINOR,Flammable Gas (%LEL),BEH_LINEAR_RISE,use_current,warning_max,300,2,YES,BEH_RECOVERY,"start_value,target_value"
+EV_GAS_LEAK_MINOR,Toxic Gas (CO),BEH_EXPONENTIAL_RISE,use_current,warning_max,300,2,YES,BEH_RECOVERY,"start_value,target_value,time_constant"
+EV_GAS_LEAK_MINOR,Oxygen,BEH_LINEAR_FALL,use_current,normal_min-0.5,300,2,YES,BEH_RECOVERY,"start_value,target_value"
+EV_GAS_LEAK_MAJOR,Toxic Gas (H2S),BEH_GAS_DIFFUSION,use_current,critical_max,600,1,YES,BEH_RECOVERY,"start_value,target_value,time_constant"
+EV_GAS_LEAK_MAJOR,Flammable Gas (%LEL),BEH_GAS_DIFFUSION,use_current,critical_max,600,1,YES,BEH_RECOVERY,"start_value,target_value,time_constant"
+EV_GAS_LEAK_MAJOR,Toxic Gas (CO),BEH_GAS_DIFFUSION,use_current,critical_max,600,1,YES,BEH_RECOVERY,"start_value,target_value,time_constant"
+EV_GAS_LEAK_MAJOR,Oxygen,BEH_LINEAR_FALL,use_current,critical_min,600,1,YES,BEH_RECOVERY,"start_value,target_value"
+EV_PRESSURE_SURGE,Pressure (Draft),BEH_SPIKE,use_current,warning_max,60,1,YES,BEH_RECOVERY,"peak_value,decay_constant"
+EV_HOT_WORK_START,Optical Opacity,BEH_RANDOM_DRIFT,use_normal_mid,warning_min,1800,2,YES,BEH_RECOVERY,"baseline_value,drift_band"
+EV_CONFINED_SPACE_ENTRY,Toxic Gas (H2S),BEH_LINEAR_RISE,use_current,warning_max,1800,1,YES,BEH_RECOVERY,"start_value,target_value"
+EV_CONFINED_SPACE_ENTRY,Toxic Gas (CO),BEH_LINEAR_RISE,use_current,warning_max,1800,1,YES,BEH_RECOVERY,"start_value,target_value"
+EV_PUMP_FAILURE,Flow (Mass/Ultrasonic),BEH_LINEAR_FALL,use_current,critical_min,300,1,YES,BEH_RECOVERY,"start_value,target_value"
+EV_PUMP_FAILURE,Level (Displacer/Radar),BEH_SLOW_DRIFT,use_current,warning_max,300,1,YES,BEH_RECOVERY,"start_value,target_value"
+EV_VALVE_FAILURE,Pressure (Draft),BEH_LINEAR_RISE,use_current,critical_max,300,1,YES,BEH_RECOVERY,"start_value,target_value"
+EV_SMOKE_DETECTION,Smoke Attenuation,BEH_SPIKE,use_current,critical_max,120,1,YES,BEH_RECOVERY,"peak_value,decay_constant"
+EV_FIRE_DETECTION,Infrared Thermal,BEH_SPIKE,use_current,critical_max,300,1,YES,BEH_RECOVERY,"peak_value,decay_constant"
+EV_POWER_FAILURE,*,BEH_STEP_CHANGE,use_current,use_current,300,1,NO,BEH_RECOVERY,"from_state,to_state"
+EV_EMERGENCY_SHUTDOWN,Flow (Mass/Ultrasonic),BEH_LINEAR_FALL,use_current,absolute_physical_min,600,1,YES,BEH_RECOVERY,"start_value,target_value"
+EV_EMERGENCY_SHUTDOWN,Pressure (Draft),BEH_LINEAR_FALL,use_current,absolute_physical_min,600,1,YES,BEH_RECOVERY,"start_value,target_value"
+EV_UNAUTHORIZED_ENTRY,*,BEH_STABLE,use_normal_mid,use_normal_mid,600,2,YES,BEH_RECOVERY,baseline_value
+EV_PPE_VIOLATION,Position/Pressure Switch,BEH_STEP_CHANGE,use_current,1,600,2,NO,BEH_RECOVERY,"from_state,to_state"
+EV_MAINTENANCE_START,Level (Displacer/Radar),BEH_SLOW_DRIFT,use_current,warning_max,1800,3,YES,BEH_RECOVERY,"start_value,target_value"
+EV_MAINTENANCE_END,Level (Displacer/Radar),BEH_RECOVERY,use_current,normal_mid,1800,3,YES,BEH_RECOVERY,"start_value,target_value"
+EV_WORKER_COLLAPSE,*,BEH_STABLE,use_normal_mid,use_normal_mid,300,1,YES,BEH_RECOVERY,baseline_value

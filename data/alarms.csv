@@ -1,0 +1,4 @@
+alarm_id,sensor_id,priority,trigger,message,acknowledged,time
+ALM_Z3_GAS_CRIT,Z3_H2S_01,1,value >= 10,Basement H2S critical level,NO,2026-07-15T00:40:00
+ALM_Z3_LEL_CRIT,Z3_LEL_01,1,value >= 40,Basement %LEL critical,NO,2026-07-15T00:42:00
+ALM_Z4_O2_INGRESS,Z4_O2_GASLINE_01,1,value >= 2,Tar gas line O2 ingress,NO,2026-07-15T00:44:00
