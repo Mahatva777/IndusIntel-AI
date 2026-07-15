@@ -1,3 +1,4 @@
 permit_id,zone_id,equipment_id,permit_type,status,issued_by,approved_by,workers_assigned,start_time,end_time,risk_level,isolation_complete,gas_test_completed,hot_work,confined_space,lockout_tagout,remarks
 P001,3,EQ_Z3_VALVE_GALLERY,Confined Space Entry,ACTIVE,W001,W001,W002,2026-07-15T00:20:00,2026-07-15T00:50:00,HIGH,YES,YES,NO,YES,YES,Valve inspection in basement gallery during normal operation.
-P002,4,EQ_Z4_TAR_EXTRACTOR,Tar Extractor Maintenance,PLANNED,W001,W001,W003,2026-07-15T00:40:00,2026-07-15T01:10:00,MEDIUM,PARTIAL,PENDING,NO,NO,YES,Flushing liquor strainer cleaning and tar level inspection.
+P999,4,EQ_Z4_TAR_EXTRACTOR,Tar Extractor Maintenance,PLANNED,W001,W001,W003,2026-07-15T00:40:00,2026-07-15T01:10:00,MEDIUM,PARTIAL,PENDING,NO,NO,YES,Flushing liquor strainer cleaning and tar level inspection.
+P002,4,EQ_Z4_TAR_EXTRACTOR,Hot Work Permit,ACTIVE,W001,W001,W003,2026-07-15T00:00:10,2026-07-15T00:40:00,HIGH,YES,YES,YES,NO,YES,Welding/hot work adjacent to tar extractor and gas off-take line; isolation and gas test confirmed prior to permit activation; supersedes prior maintenance-only scope.

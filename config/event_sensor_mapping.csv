@@ -25,3 +25,6 @@ EV_PPE_VIOLATION,Position/Pressure Switch,BEH_STEP_CHANGE,use_current,1,600,2,NO
 EV_MAINTENANCE_START,Level (Displacer/Radar),BEH_SLOW_DRIFT,use_current,warning_max,1800,3,YES,BEH_RECOVERY,"start_value,target_value"
 EV_MAINTENANCE_END,Level (Displacer/Radar),BEH_RECOVERY,use_current,normal_mid,1800,3,YES,BEH_RECOVERY,"start_value,target_value"
 EV_WORKER_COLLAPSE,*,BEH_STABLE,use_normal_mid,use_normal_mid,300,1,YES,BEH_RECOVERY,baseline_value
+EV_HOT_WORK_START,Temperature,BEH_THERMAL_INERTIA,use_current,warning_max,1800,2,YES,BEH_RECOVERY,"start_value,target_value,time_constant"
+EV_PRESSURE_SURGE,Level (Displacer/Radar),BEH_SLOW_DRIFT,use_current,warning_max,60,1,YES,BEH_RECOVERY,"start_value,target_value"
+EV_FIRE_DETECTION,Flame Detection (UV/IR),BEH_STEP_CHANGE,use_current,1,300,1,NO,BEH_RECOVERY,"from_state,to_state"

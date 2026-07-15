@@ -1,0 +1,67 @@
+# 13 – Future Roadmap
+
+## From Prototype to Enterprise Product
+
+### Phase 1 – Harden Prototype
+
+- Stabilize simulator and Risk Engine.
+- Improve dashboard UX.
+- Add basic CV integrations and RAG explanations.
+
+### Phase 2 – Multi-Plant Support
+
+- Introduce `plant_id` in config and telemetry.
+- Manage multiple digital twins in one instance.[web:326]
+- Provide plant‑specific risk models and dashboards.
+
+### Phase 3 – Live Data Integration
+
+- Replace simulator with:
+
+  - MQTT ingestion for IoT sensors.
+  - OPC‑UA ingestion for PLC/SCADA tags.
+  - Kafka streams for high‑volume data.
+
+- Connect to Azure IoT, AWS IoT for cloud connectivity.[web:324]
+
+### Phase 4 – Edge AI and Real SCADA
+
+- Deploy CV models and risk logic near cameras/PLC.
+- Integrate directly with SCADA HMIs and historians.
+- Ensure low latency and offline resilience.
+
+### Phase 5 – Autonomous Agents
+
+- Mature agents for notifications, compliance, maintenance, permits.
+- Introduce reinforcement learning or advanced scheduling.
+
+### Phase 6 – Mobile App and Cloud SaaS
+
+- Mobile app for safety officers and workers:
+
+  - Real‑time alerts.
+  - Zone maps and evacuation guides.
+  - Permit and task views.
+
+- SaaS platform:
+
+  - Multi‑tenant architecture.
+  - Tiered pricing.
+  - Analytics and benchmarking.
+
+### Phase 7 – Analytics and Benchmarking
+
+- Cross‑site dashboards:
+
+  - Incident frequencies and severities.
+  - Leading indicators (near‑misses, risk scores).
+- Benchmark plants and share best practices.
+
+## Guiding Principles
+
+- **Config‑driven**: Plant logic must remain in data, not code.
+- **Explainable**: Risk decisions must be traceable to telemetry, CV events, permits, and knowledge base.
+- **Standards‑aligned**: Regulatory obligations (OISD, DGMS, Factory Act) must be reflected in risk logic and RAG.[web:84][web:224]
+- **Extensible**: Platform must support new sensors, zones, events, behaviours, and agents without breaking architecture.
+
+This roadmap is intentionally ambitious; it should be revisited regularly as the prototype and ecosystem mature.
