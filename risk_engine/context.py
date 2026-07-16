@@ -16,7 +16,7 @@ from enum import Enum
 from types import MappingProxyType
 from typing import Mapping, Optional
 
-from risk_engine.models import CVEvent
+from risk_engine.models import CVEvent, CVPPEDetection
 
 
 def _require_non_empty(value: str, field_name: str) -> None:
@@ -170,6 +170,7 @@ class PlantSnapshot:
     zones: Mapping[str, ZoneContext]
     sensor_readings: Mapping[str, SensorReading]
     cv_events: tuple[CVEvent, ...] = field(default_factory=tuple)
+    cv_ppe_detections: tuple[CVPPEDetection, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         if not isinstance(self.zones, MappingProxyType):
@@ -198,3 +199,7 @@ class PlantSnapshot:
     def cv_events_in_zone(self, zone_id: str) -> tuple[CVEvent, ...]:
         """Return all CV events whose zone_id matches ``zone_id``."""
         return tuple(event for event in self.cv_events if event.zone_id == zone_id)
+
+    def cv_ppe_detections_in_zone(self, zone_id: str) -> tuple[CVPPEDetection, ...]:
+        """Return all CV PPE detections whose zone_id matches ``zone_id``."""
+        return tuple(d for d in self.cv_ppe_detections if d.zone_id == zone_id)
