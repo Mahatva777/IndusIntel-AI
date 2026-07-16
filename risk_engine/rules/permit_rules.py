@@ -94,32 +94,34 @@ class ConfinedSpaceGasRule:
                 )
                 severity = min(1.0, base_severity + _CONFINED_SPACE_PERMIT_BOOST)
                 band = _severity_band(reading.value, cfg)
-                fragments.extend(
-                    make_fragment(
-                        rule_id=self.rule_id,
-                        source=EvidenceSource.PERMIT_SYSTEM,
-                        dimension=dimension,
-                        finding=(
-                            f"{cfg.sensor_type} at {reading.value:.2f}{cfg.unit} "
-                            f"[{band}] while confined space entry permit "
-                            f"{permit.permit_id} is active in Zone {zone_id}"
-                        ),
-                        severity_contribution=severity,
-                        timestamp=snapshot.timestamp,
-                        zone_id=zone_id,
-                        equipment_id=permit.equipment_id,
-                        sensor_id=cfg.sensor_id,
-                        worker_id=permit.workers_assigned[0] if permit.workers_assigned else None,
-                        applicable_regulation=_OISD_CONFINED_SPACE_REG,
-                        supporting_context=(
-                            f"permit_id={permit.permit_id}",
-                            f"gas_test_completed={permit.gas_test_completed}",
-                            f"value={reading.value}",
-                            f"normal_max={cfg.normal_max}",
-                        ),
-                    )
-                    for dimension in (RiskDimension.WORKER, RiskDimension.COMPLIANCE)
-                )
+                workers = permit.workers_assigned or (None,)
+                for dimension in (RiskDimension.WORKER, RiskDimension.COMPLIANCE):
+                    for worker_id in workers:
+                        fragments.append(
+                            make_fragment(
+                                rule_id=self.rule_id,
+                                source=EvidenceSource.PERMIT_SYSTEM,
+                                dimension=dimension,
+                                finding=(
+                                    f"{cfg.sensor_type} at {reading.value:.2f}{cfg.unit} "
+                                    f"[{band}] while confined space entry permit "
+                                    f"{permit.permit_id} is active in Zone {zone_id}"
+                                ),
+                                severity_contribution=severity,
+                                timestamp=snapshot.timestamp,
+                                zone_id=zone_id,
+                                equipment_id=permit.equipment_id,
+                                sensor_id=cfg.sensor_id,
+                                worker_id=worker_id,
+                                applicable_regulation=_OISD_CONFINED_SPACE_REG,
+                                supporting_context=(
+                                    f"permit_id={permit.permit_id}",
+                                    f"gas_test_completed={permit.gas_test_completed}",
+                                    f"value={reading.value}",
+                                    f"normal_max={cfg.normal_max}",
+                                ),
+                            )
+                        )
         return tuple(fragments)
 
     @staticmethod

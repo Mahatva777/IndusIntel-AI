@@ -57,7 +57,11 @@ class _TimedRecord:
 
     def active_at(self, wall_time: Optional[float]) -> bool:
         if wall_time is None:
-            return getattr(self.state, "is_active", getattr(self.state, "is_in_progress", True))
+            if isinstance(self.state, PermitState):
+                return self.state.is_active
+            if isinstance(self.state, MaintenanceState):
+                return self.state.is_in_progress
+            return True
         start_ok = self.start is None or self.start.timestamp() <= wall_time
         end_ok = self.end is None or wall_time <= self.end.timestamp()
         return start_ok and end_ok
@@ -86,7 +90,7 @@ class CSVSnapshotProducer:
         maintenance = self._load_maintenance()
         workers_by_zone = self._load_workers()
         scenario_start = self._scenario_start or self._infer_scenario_start(
-            permits + maintenance
+            permits, maintenance
         )
 
         for timestamp, readings in self._iter_telemetry_by_timestamp():
@@ -236,11 +240,34 @@ class CSVSnapshotProducer:
                 by_zone.setdefault(state.current_zone, []).append(state)
         return by_zone
 
-    @staticmethod
     def _infer_scenario_start(
-        records: list[_TimedRecord],
+        self,
+        permits: list[_TimedRecord],
+        maintenance: list[_TimedRecord],
     ) -> Optional[datetime]:
-        starts = [r.start for r in records if r.start is not None]
+        relevant: list[_TimedRecord] = []
+        if self._scenario_id is not None:
+            try:
+                scenarios = self._config_loader.load_scenarios()
+                scenario = scenarios[self._scenario_id]
+                involved = set(scenario.permits_involved)
+                if involved:
+                    relevant = [
+                        r
+                        for r in permits
+                        if isinstance(r.state, PermitState)
+                        and r.state.permit_id in involved
+                    ]
+            except (KeyError, Exception):
+                pass
+        if not relevant:
+            relevant = permits
+
+        starts = [
+            r.start
+            for r in relevant + maintenance
+            if r.start is not None
+        ]
         if not starts:
             return None
-        return min(starts).replace(hour=0, minute=0, second=0, microsecond=0)
+        return min(starts)

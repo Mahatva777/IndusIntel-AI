@@ -29,9 +29,11 @@ def _read_rows(path: Path) -> list[dict[str, str]]:
 
 
 def _parse_tuple(raw: str) -> tuple[str, ...]:
-    """Split a delimited string field into a tuple, ignoring blanks."""
+    """Split a delimited string field into a tuple, ignoring blanks.
+    Supports both ; and , as delimiters."""
     if not raw:
         return ()
+    raw = raw.replace(",", _LIST_DELIMITER)
     return tuple(part.strip() for part in raw.split(_LIST_DELIMITER) if part.strip())
 
 

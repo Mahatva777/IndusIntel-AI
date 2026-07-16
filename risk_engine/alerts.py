@@ -153,6 +153,13 @@ class AlertManager:
         self._acknowledged.add(zone_id)
         self._high_since.pop(zone_id, None)
 
+    def reset(self) -> None:
+        """Clear all per-zone state so a fresh scenario run starts with
+        clean cooldown clocks, escalation timers and ack flags."""
+        self._last_alerted.clear()
+        self._high_since.clear()
+        self._acknowledged.clear()
+
     def _process_one(self, assessment: CompoundRiskAssessment) -> Optional[Alert]:
         zone_id = assessment.zone_id
         band = self._effective_band(zone_id, assessment)

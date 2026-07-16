@@ -75,6 +75,10 @@ class GasAccumulationRule:
             if reading.value < cfg.warning_max:
                 continue
             severity = linear_severity(reading.value, cfg.warning_max, cfg.critical_max)
+            zone = snapshot.get_zone(cfg.zone_id)
+            is_confined = zone is not None and any(
+                "confined space" in h.lower() for h in zone.hazard_classification
+            )
             fragments.append(
                 make_fragment(
                     rule_id=self.rule_id,
@@ -91,13 +95,14 @@ class GasAccumulationRule:
                     equipment_id=cfg.equipment_id,
                     sensor_id=cfg.sensor_id,
                     applicable_regulation=(
-                        _OISD_Z3_REGULATION if cfg.zone_id == "3" else None
+                        _OISD_Z3_REGULATION if is_confined else None
                     ),
                     supporting_context=(
                         f"value={reading.value}",
                         f"warning_threshold={cfg.warning_max}",
                         f"critical_threshold={cfg.critical_max}",
                         f"unit={cfg.unit}",
+                        f"confined_space={is_confined}",
                     ),
                 )
             )

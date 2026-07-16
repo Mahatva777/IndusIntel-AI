@@ -26,6 +26,7 @@ from risk_engine.alerts import Alert, AlertManager, PlantEmergencyAlert
 from risk_engine.context import PlantSnapshot
 from risk_engine.fusion import FusionEngine
 from risk_engine.models import CompoundRiskAssessment, RiskSeverityBand
+from risk_engine.rule_engine import RuleEngine
 from risk_engine.rules.base import Rule, RuleSet
 from risk_engine.rules.cv_rules import (
     PPEViolationRule,
@@ -47,7 +48,6 @@ from risk_engine.rules.sensor_rules import (
 from risk_engine.rules.trend_rules import (
     GasRisingTrendRule,
     RapidEscalationRule,
-    StatefulRule,
     SustainedWarningRule,
 )
 from risk_engine.rules.worker_rules import (
@@ -87,7 +87,7 @@ def _build_sensor_thresholds(
         sensor_id: SensorThresholds(
             sensor_id=sensor.sensor_id,
             zone_id=sensor.zone_id,
-            equipment_id=sensor.equipment_id,
+            equipment_id=sensor.equipment_tag,
             sensor_type=sensor.sensor_type,
             unit=sensor.unit,
             normal_min=sensor.normal_min,
@@ -127,19 +127,20 @@ def _default_rules(thresholds: Mapping[str, SensorThresholds]) -> tuple[Rule, ..
 
 
 class RiskEngine:
-    """Drains a scenario's snapshots through fusion and alerting, and
-    retains everything a dashboard needs to read back afterward."""
+    """Drains a scenario's snapshots through the rule engine, fusion,
+    and alerting, and retains everything a dashboard needs to read
+    back afterward."""
 
     def __init__(
         self,
         producer_factory: SnapshotProducerFactory,
-        rules: RuleSet,
+        rule_engine: RuleEngine,
         fusion: FusionEngine,
         alert_manager: AlertManager,
         config_loader: Optional[ConfigLoader] = None,
     ) -> None:
         self._producer_factory = producer_factory
-        self._rules: tuple[Rule, ...] = tuple(rules)
+        self._rule_engine = rule_engine
         self._fusion = fusion
         self._alert_manager = alert_manager
         self._config_loader = config_loader  # retained for dashboard/debug use only
@@ -154,24 +155,23 @@ class RiskEngine:
         data_root: Path,
         alert_manager: Optional[AlertManager] = None,
     ) -> "RiskEngine":
-        """Wire a standard deployment from disk. The only place in
-        RiskEngine that knows CSVSnapshotProducer, ConfigLoader, or that
-        ``data_root / scenario_id`` is where a scenario's CSVs live."""
+        """Wire a standard deployment from disk."""
         config_loader = ConfigLoader(config_dir)
         thresholds = _build_sensor_thresholds(config_loader)
         rules = _default_rules(thresholds)
-        fusion = FusionEngine(rules=rules)
+        rule_engine = RuleEngine(rules)
+        fusion = FusionEngine()
 
         def producer_factory(scenario_id: str) -> SnapshotProducer:
             return CSVSnapshotProducer(
-                data_dir=data_root / scenario_id,
+                data_dir=data_root,
                 config_dir=config_dir,
                 scenario_id=scenario_id,
             )
 
         return cls(
             producer_factory=producer_factory,
-            rules=rules,
+            rule_engine=rule_engine,
             fusion=fusion,
             alert_manager=alert_manager or AlertManager(),
             config_loader=config_loader,
@@ -206,22 +206,14 @@ class RiskEngine:
         timestamp as it's produced, instead of draining to a list."""
         producer = self._producer_factory(scenario_id)
         for snapshot in producer.produce():
-            self._advance_stateful_rules(snapshot)
-            assessments = self._fusion.assess(snapshot)
+            fragments = self._rule_engine.evaluate(snapshot)
+            assessments = self._fusion.assess(snapshot, fragments)
             self._record_assessments(assessments)
             alerts, emergency = self._alert_manager.process(assessments)
             self._alert_history.extend(alerts)
             if emergency is not None:
                 self._emergency_history.append(emergency)
             yield snapshot, alerts
-
-    def _advance_stateful_rules(self, snapshot: PlantSnapshot) -> None:
-        """Feed the snapshot to every trend rule's memory window before
-        fusion.assess() calls evaluate() on that same rule instance --
-        the ordering trend_rules.py's docstring requires."""
-        for rule in self._rules:
-            if isinstance(rule, StatefulRule):
-                rule.update(snapshot)
 
     def _record_assessments(
         self, assessments: Sequence[CompoundRiskAssessment]

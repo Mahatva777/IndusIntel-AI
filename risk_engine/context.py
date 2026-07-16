@@ -32,6 +32,7 @@ class SensorQuality(Enum):
     OK = "OK"
     WARN = "WARN"
     CRIT = "CRIT"
+    OUT_OF_RANGE = "OUT_OF_RANGE"
 
 
 @dataclass(slots=True, frozen=True)

@@ -22,7 +22,6 @@ from risk_engine.models import (
     RiskDimension,
     RiskSeverityBand,
 )
-from risk_engine.rules.base import Rule, RuleSet
 
 _PLANT_WIDE_ZONE_KEY = "PLANT"  # bucket for cross-zone fragments (zone_id=None)
 
@@ -98,34 +97,50 @@ def _recommended_action(top_fragment: EvidenceFragment, band: RiskSeverityBand) 
 
 
 class FusionEngine:
-    """Runs injected rules against a PlantSnapshot and fuses the resulting
-    evidence into one CompoundRiskAssessment per zone that produced any."""
+    """Fuses pre-collected EvidenceFragments into one
+    CompoundRiskAssessment per zone that produced any.
+
+    This module does NOT call rules directly -- rule orchestration
+    (update()/evaluate() lifecycle, error isolation) is the
+    responsibility of risk_engine.rule_engine.RuleEngine.
+    """
 
     def __init__(
         self,
-        rules: RuleSet,
         dimension_weights: Optional[Mapping[RiskDimension, float]] = None,
     ) -> None:
-        self._rules: tuple[Rule, ...] = tuple(rules)
         self._weights = {**DEFAULT_DIMENSION_WEIGHTS, **(dimension_weights or {})}
 
-    def assess(self, snapshot: PlantSnapshot) -> tuple[CompoundRiskAssessment, ...]:
-        """Evaluate all rules once and return one assessment per zone with
-        evidence. Zones with zero fragments produce no assessment."""
-        fragments_by_zone = self._collect_fragments(snapshot)
+    def assess(
+        self,
+        snapshot: PlantSnapshot,
+        fragments: Sequence[EvidenceFragment],
+    ) -> tuple[CompoundRiskAssessment, ...]:
+        """Fuse pre-collected evidence into one assessment per zone.
+
+        Args:
+            snapshot: The current plant snapshot (provides timestamp,
+                      zone structure and scenario_id for assessments).
+            fragments: EvidenceFragments already collected by RuleEngine.
+
+        Returns:
+            One CompoundRiskAssessment per zone that produced at least
+            one fragment.  Zones with zero fragments produce no assessment.
+        """
+        fragments_by_zone = self._group_by_zone(fragments)
         return tuple(
-            self._build_assessment(zone_id, fragments, snapshot)
-            for zone_id, fragments in fragments_by_zone.items()
+            self._build_assessment(zone_id, zone_fragments, snapshot)
+            for zone_id, zone_fragments in fragments_by_zone.items()
         )
 
-    def _collect_fragments(
-        self, snapshot: PlantSnapshot
+    @staticmethod
+    def _group_by_zone(
+        fragments: Sequence[EvidenceFragment],
     ) -> dict[str, list[EvidenceFragment]]:
         by_zone: dict[str, list[EvidenceFragment]] = {}
-        for rule in self._rules:
-            for fragment in rule.evaluate(snapshot):
-                key = fragment.zone_id or _PLANT_WIDE_ZONE_KEY
-                by_zone.setdefault(key, []).append(fragment)
+        for fragment in fragments:
+            key = fragment.zone_id or _PLANT_WIDE_ZONE_KEY
+            by_zone.setdefault(key, []).append(fragment)
         return by_zone
 
     def _build_assessment(

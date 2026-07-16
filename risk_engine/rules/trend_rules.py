@@ -65,6 +65,8 @@ class StatefulRule(Protocol):
 
     def evaluate(self, snapshot: PlantSnapshot) -> tuple[EvidenceFragment, ...]: ...
 
+    def reset(self) -> None: ...
+
 
 @dataclass(slots=True, frozen=True)
 class _Sample:
@@ -93,6 +95,9 @@ class GasRisingTrendRule:
         self._thresholds = thresholds
         self._window_size = window_size
         self._windows: dict[str, Deque[_Sample]] = {}
+
+    def reset(self) -> None:
+        self._windows.clear()
 
     def update(self, snapshot: PlantSnapshot) -> None:
         for sensor_id, cfg in self._thresholds.items():
@@ -170,6 +175,9 @@ class RapidEscalationRule:
         self._window_size = window_size
         self._windows: dict[str, Deque[_Sample]] = {}
 
+    def reset(self) -> None:
+        self._windows.clear()
+
     def update(self, snapshot: PlantSnapshot) -> None:
         for sensor_id, cfg in self._thresholds.items():
             if cfg.sensor_type not in _ESCALATION_SENSOR_TYPES:
@@ -238,6 +246,10 @@ class SustainedWarningRule:
         self._min_duration_seconds = min_duration_seconds
         self._warn_since: dict[str, float] = {}
         self._latest_value: dict[str, tuple[float, str]] = {}  # sensor_id -> (value, zone_id)
+
+    def reset(self) -> None:
+        self._warn_since.clear()
+        self._latest_value.clear()
 
     def update(self, snapshot: PlantSnapshot) -> None:
         for sensor_id, reading in snapshot.sensor_readings.items():
