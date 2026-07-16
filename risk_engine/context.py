@@ -125,20 +125,34 @@ class ZoneContext:
     hazard_classification: tuple[str, ...]
     ppe_required: tuple[str, ...]
     permit_required: bool
-    active_permits: tuple[PermitState, ...] = field(default_factory=tuple)
+    permits_in_window: tuple[PermitState, ...] = field(default_factory=tuple)
     workers_present: tuple[WorkerState, ...] = field(default_factory=tuple)
     active_maintenance: tuple[MaintenanceState, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         _require_non_empty(self.zone_id, "ZoneContext.zone_id")
 
+    @property
+    def active_permits(self) -> tuple[PermitState, ...]:
+        """Permits that are both temporally in-window AND status ACTIVE.
+
+        This is what every rule should read by default. ``permits_in_window``
+        is the raw, unfiltered feed SnapshotBuilder produces from time-range
+        matching alone -- it can and does contain PLANNED, CANCELLED, or
+        EXPIRED permits whose schedule happens to overlap this instant. Only
+        reach for ``permits_in_window`` directly if a rule specifically needs
+        to reason about non-active permits (e.g. a future "permit scheduled
+        but never activated" process-risk rule).
+        """
+        return tuple(p for p in self.permits_in_window if p.is_active)
+
     def has_confined_space_permit(self) -> bool:
         """Whether any active permit in this zone is a confined-space entry."""
-        return any(p.confined_space and p.is_active for p in self.active_permits)
+        return any(p.confined_space for p in self.active_permits)
 
     def has_hot_work_permit(self) -> bool:
         """Whether any active permit in this zone is hot work."""
-        return any(p.hot_work and p.is_active for p in self.active_permits)
+        return any(p.hot_work for p in self.active_permits)
 
 
 @dataclass(slots=True, frozen=True)

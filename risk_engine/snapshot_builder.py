@@ -102,7 +102,7 @@ class CSVSnapshotProducer:
                     hazard_classification=zone.hazard_classification,
                     ppe_required=zone.ppe_required,
                     permit_required=zone.permit_required,
-                    active_permits=tuple(
+                    permits_in_window=tuple(
                         p for p in active_permits if p.zone_id == zone_id
                     ),
                     workers_present=tuple(workers_by_zone.get(zone_id, [])),
