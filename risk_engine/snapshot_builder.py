@@ -74,12 +74,14 @@ class CSVSnapshotProducer:
         scenario_start: Optional[datetime] = None,
     ) -> None:
         self._data_dir = data_dir
+        self._config_dir = config_dir
         self._config_loader = ConfigLoader(config_dir)
         self._scenario_id = scenario_id
         self._scenario_start = scenario_start
 
     def produce(self) -> Iterator[PlantSnapshot]:
         zones = self._config_loader.load_zones()
+        permit_required_flags = self._load_permit_required_flags()
         permits = self._load_permits()
         maintenance = self._load_maintenance()
         workers_by_zone = self._load_workers()
@@ -101,7 +103,7 @@ class CSVSnapshotProducer:
                     zone_id=zone_id,
                     hazard_classification=zone.hazard_classification,
                     ppe_required=zone.ppe_required,
-                    permit_required=zone.permit_required,
+                    permit_required=permit_required_flags.get(zone_id, False),
                     permits_in_window=tuple(
                         p for p in active_permits if p.zone_id == zone_id
                     ),
@@ -139,6 +141,26 @@ class CSVSnapshotProducer:
                 )
         for ts in sorted(grouped):
             yield ts, grouped[ts]
+
+    def _load_permit_required_flags(self) -> dict[str, bool]:
+        """Correctly derive permit_required per zone from raw zones.csv.
+
+        simulator.loader.Zone.permit_required is unusable as-is: its
+        source column holds permit *type* text ("Confined Space, Gas
+        Testing, Isolation"), not a true/false literal, and
+        simulator's ``_parse_bool`` only recognizes true/1/yes/y --
+        so it evaluates to False for every zone regardless of content.
+        simulator/ is not ours to modify, so this reads the same
+        column directly and treats "any text present" as required,
+        which matches what the column actually encodes.
+        """
+        flags: dict[str, bool] = {}
+        with (self._config_dir / "zones.csv").open(
+            newline="", encoding="utf-8"
+        ) as handle:
+            for row in csv.DictReader(handle):
+                flags[row["zone_id"]] = bool(row["permit_required"].strip())
+        return flags
 
     def _load_permits(self) -> list[_TimedRecord]:
         records = []
