@@ -1,0 +1,9 @@
+@import "../shared/tokens/tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: var(--font-family-industrial);
+}

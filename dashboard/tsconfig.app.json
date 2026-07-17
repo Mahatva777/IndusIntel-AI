@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode (Vite) */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Strictness — safety-critical UI, keep this strict */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Path aliases mirror the domain-boundary folder structure in src/
+     * (see README.md). Keep in sync with vite.config.ts. */
+    "baseUrl": ".",
+    "paths": {
+      "@domain/*": ["src/domain/*"],
+      "@ui-state/*": ["src/ui-state/*"],
+      "@derived/*": ["src/derived/*"],
+      "@streaming/*": ["src/streaming/*"],
+      "@api/*": ["src/api/*"],
+      "@panels/*": ["src/panels/*"],
+      "@shell/*": ["src/shell/*"],
+      "@shared/*": ["src/shared/*"],
+      "@types/*": ["src/types/*"]
+    }
+  },
+  "include": ["src", "src/derived"]
+}
