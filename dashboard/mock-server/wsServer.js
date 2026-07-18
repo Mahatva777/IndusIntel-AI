@@ -29,7 +29,7 @@ export function startWsServer() {
   const authenticated = new Set();
 
   setBroadcaster((service, envelope) => {
-    const message = JSON.stringify({ type: "event", ...envelope });
+    const message = JSON.stringify({ type: "event", service, ...envelope });
     for (const client of authenticated) {
       if (client.readyState === client.OPEN) client.send(message);
     }

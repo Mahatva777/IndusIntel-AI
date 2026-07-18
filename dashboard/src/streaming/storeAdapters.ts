@@ -13,28 +13,28 @@
 import type { EventEnvelope, ServiceName, ServiceSnapshot } from "./types";
 
 import { removeCamera, upsertCamera } from "@domain/camera/store";
-import { removeIncident, replaceAllIncidents, upsertEvidence, upsertIncident, upsertRecommendation } from "@domain/incident/store";
+import { removeIncident, resetIncidentStore, addEvidence, upsertIncident, upsertRecommendation } from "@domain/incident/store";
 import { removeWorker, upsertWorker } from "@domain/worker/store";
 import { removePermit, upsertPermit } from "@domain/permit/store";
-import { removeZone, upsertZone } from "@domain/zone/store";
-import { removeEquipment, upsertEquipment } from "@domain/equipment/store";
-import { removeDigitalTwinElement, upsertDigitalTwinElement } from "@domain/digital-twin/store";
+import { upsertZone } from "@domain/zone/store";
+import { upsertEquipment } from "@domain/equipment/store";
+import { upsertDigitalTwin } from "@domain/digital-twin/store";
 import { ingestTelemetryReading } from "@domain/telemetry/store";
 import { setServiceHealth } from "@domain/system-health/store";
-import { removeCvDetection, upsertCvDetection } from "@domain/future-cv/store";
-import { upsertRagReference } from "@domain/future-rag/store";
+import { addCvDetection } from "@domain/future-cv/store";
+import { cacheKnowledgeRecord } from "@domain/future-rag/store";
 
 import type { Camera, CameraId } from "@domain/camera/types";
 import type { Evidence, Incident, IncidentId, Recommendation } from "@domain/incident/types";
 import type { Worker, WorkerId } from "@domain/worker/types";
 import type { Permit, PermitId } from "@domain/permit/types";
-import type { Zone, ZoneId } from "@domain/zone/types";
-import type { Equipment, EquipmentId } from "@domain/equipment/types";
-import type { DigitalTwinElement, DigitalTwinElementId } from "@domain/digital-twin/types";
-import type { SensorId, TelemetryReading } from "@domain/telemetry/types";
+import type { Zone } from "@domain/zone/types";
+import type { Equipment } from "@domain/equipment/types";
+import type { DigitalTwin } from "@domain/digital-twin/types";
+import type { TelemetryReading } from "@domain/telemetry/types";
 import type { ServiceHealthSnapshot } from "@domain/system-health/types";
 import type { CvDetection, CvDetectionId } from "@domain/future-cv/types";
-import type { RagReference } from "@domain/future-rag/types";
+import type { KnowledgeRecord } from "@domain/future-rag/types";
 
 export interface StoreAdapter {
   /** Apply one already-ordered, already-validated event to its owning store(s). */
@@ -76,14 +76,19 @@ const incidentAdapter: StoreAdapter = {
         upsertRecommendation(event.payload as Recommendation);
         return;
       case "Evidence":
-        upsertEvidence(event.payload as Evidence);
+        addEvidence(event.payload as Evidence);
         return;
       default:
         return;
     }
   },
   applySnapshot(snapshot) {
-    replaceAllIncidents(snapshot.entities as readonly Incident[]);
+    resetIncidentStore();
+    for (const entity of snapshot.entities as any[]) {
+      if ("severity" in entity) upsertIncident(entity);
+      else if ("action" in entity) upsertRecommendation(entity);
+      else if ("mediaType" in entity) addEvidence(entity);
+    }
   },
 };
 
@@ -120,38 +125,39 @@ const digitalTwinAdapter: StoreAdapter = {
     switch (event.entityType) {
       case "Zone": {
         const payload = event.payload as Zone;
-        if (isDeleteOp(event)) removeZone(payload.id as ZoneId);
-        else upsertZone(payload);
+        if (!isDeleteOp(event)) upsertZone(payload);
         return;
       }
       case "Equipment": {
         const payload = event.payload as Equipment;
-        if (isDeleteOp(event)) removeEquipment(payload.id as EquipmentId);
-        else upsertEquipment(payload);
+        if (!isDeleteOp(event)) upsertEquipment(payload);
         return;
       }
       case "DigitalTwinElement":
       default: {
-        const payload = event.payload as DigitalTwinElement;
-        if (isDeleteOp(event)) removeDigitalTwinElement(payload.id as DigitalTwinElementId);
-        else upsertDigitalTwinElement(payload);
+        const payload = event.payload as DigitalTwin;
+        if (!isDeleteOp(event)) upsertDigitalTwin(payload);
         return;
       }
     }
   },
   applySnapshot(snapshot) {
-    for (const entity of snapshot.entities as readonly DigitalTwinElement[]) upsertDigitalTwinElement(entity);
+    for (const entity of snapshot.entities as any[]) {
+      if (entity.id && entity.id.startsWith("zone-")) upsertZone(entity);
+      else if (entity.id && entity.id.startsWith("equip-")) upsertEquipment(entity);
+      else upsertDigitalTwin(entity);
+    }
   },
 };
 
 const telemetryAdapter: StoreAdapter = {
   applyEvent(event) {
     const payload = event.payload as TelemetryReading;
-    ingestTelemetryReading(payload.sensorId as SensorId, payload);
+    ingestTelemetryReading(payload);
   },
   applySnapshot(snapshot) {
     for (const entity of snapshot.entities as readonly TelemetryReading[]) {
-      ingestTelemetryReading(entity.sensorId as SensorId, entity);
+      ingestTelemetryReading(entity);
     }
   },
 };
@@ -159,11 +165,11 @@ const telemetryAdapter: StoreAdapter = {
 const systemHealthAdapter: StoreAdapter = {
   applyEvent(event) {
     const payload = event.payload as ServiceHealthSnapshot;
-    setServiceHealth(payload.service, payload);
+    setServiceHealth(payload);
   },
   applySnapshot(snapshot) {
     for (const entity of snapshot.entities as readonly ServiceHealthSnapshot[]) {
-      setServiceHealth(entity.service, entity);
+      setServiceHealth(entity);
     }
   },
 };
@@ -171,11 +177,10 @@ const systemHealthAdapter: StoreAdapter = {
 const cvAdapter: StoreAdapter = {
   applyEvent(event) {
     const payload = event.payload as CvDetection;
-    if (isDeleteOp(event)) removeCvDetection(payload.id as CvDetectionId);
-    else upsertCvDetection(payload);
+    if (!isDeleteOp(event)) addCvDetection(payload);
   },
   applySnapshot(snapshot) {
-    for (const entity of snapshot.entities as readonly CvDetection[]) upsertCvDetection(entity);
+    for (const entity of snapshot.entities as readonly CvDetection[]) addCvDetection(entity);
   },
 };
 
@@ -183,10 +188,10 @@ const ragAdapter: StoreAdapter = {
   applyEvent(event) {
     // §1.3: RAG is Immutable / LRU cache — references are added, never
     // mutated in place; eviction policy is out of scope for this prompt.
-    upsertRagReference(event.payload as RagReference);
+    cacheKnowledgeRecord(event.payload as KnowledgeRecord);
   },
   applySnapshot(snapshot) {
-    for (const entity of snapshot.entities as readonly RagReference[]) upsertRagReference(entity);
+    for (const entity of snapshot.entities as readonly KnowledgeRecord[]) cacheKnowledgeRecord(entity);
   },
 };
 

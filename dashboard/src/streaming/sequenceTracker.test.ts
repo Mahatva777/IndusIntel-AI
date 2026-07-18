@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
-import { SequenceTracker } from "../sequenceTracker";
-import type { EventEnvelope } from "../types";
+import { SequenceTracker } from "./sequenceTracker";
+import type { EventEnvelope } from "./types";
 
 function envelope(sequenceId: number, overrides: Partial<EventEnvelope> = {}): EventEnvelope {
   return {

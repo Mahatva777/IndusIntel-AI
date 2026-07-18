@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { scaled } from "./config.js";
 import { emitEvent } from "./emit.js";
 import { PERMITS, WORKERS, ZONES } from "./seed.js";
+import { getEntity } from "./state.js";
 
 /**
  * §9.10: the backend is the sole owner/executor of the escalation timer —
@@ -19,16 +20,23 @@ const ESCALATION_TIMELINE_MS = [
 /** incidentId -> { severity, zoneId, timers: Timeout[], acknowledged, resolved } */
 const runtime = new Map();
 
-function clearTimers(id) {
+export function clearTimers(id) {
   const r = runtime.get(id);
   if (!r) return;
-  r.timers.forEach(clearTimeout);
+  for (const t of r.timers) clearTimeout(t);
   r.timers = [];
 }
 
-function baseIncidentPayload(id, { severity, zoneId, workerIds, permitIds, riskScore, confidenceScore }) {
+export function clearAllTimers() {
+  for (const id of runtime.keys()) {
+    clearTimers(id);
+  }
+}
+
+function baseIncidentPayload(id, { name, severity, zoneId, workerIds, permitIds, riskScore, confidenceScore }) {
   return {
     id,
+    name,
     zoneId,
     status: "Active",
     severity,
@@ -48,6 +56,7 @@ function baseIncidentPayload(id, { severity, zoneId, workerIds, permitIds, riskS
  * honors that distinction rather than escalating everything uniformly.
  */
 export function createIncident({
+  name = "Unknown Incident",
   severity = "Emergency",
   zoneId = ZONES[0].id,
   workerIds = [WORKERS[0].id],
@@ -56,9 +65,10 @@ export function createIncident({
   confidenceScore = 0.92,
   autoAcknowledgeAfterMs = null,
   autoResolveAfterMs = null,
+  recommendationContent = "Reduce furnace load and dispatch inspection crew.",
 } = {}) {
   const id = `incident-${randomUUID().slice(0, 8)}`;
-  const payload = baseIncidentPayload(id, { severity, zoneId, workerIds, permitIds, riskScore, confidenceScore });
+  const payload = baseIncidentPayload(id, { name, severity, zoneId, workerIds, permitIds, riskScore, confidenceScore });
   emitEvent("Incident", "Incident", "create", payload);
 
   runtime.set(id, { severity, zoneId, timers: [], acknowledged: false, resolved: false });
@@ -71,13 +81,13 @@ export function createIncident({
     emitEvent("Incident", "Recommendation", "create", {
       id: `rec-${id}`,
       incidentId: id,
-      content: "Reduce furnace load and dispatch inspection crew.",
+      content: recommendationContent,
       acknowledged: false,
     });
     emitEvent("Incident", "Evidence", "create", {
       id: `evidence-${id}`,
       incidentId: id,
-      sourceType: "sensor-threshold",
+      sourceType: "Sensor",
       createdAt: new Date().toISOString(),
     });
   }, scaled(2_000));
@@ -112,7 +122,8 @@ export function acknowledgeIncident(id) {
   if (!r || r.resolved) return false;
   r.acknowledged = true;
   clearTimers(id);
-  emitEvent("Incident", "Incident", "update", { id, escalationLevel: "Acknowledged" });
+  const existing = getEntity("Incident", "Incident", id) || {};
+  emitEvent("Incident", "Incident", "update", { ...existing, id, escalationLevel: "Acknowledged" });
   return true;
 }
 
@@ -122,7 +133,58 @@ export function resolveIncident(id) {
   if (!r || r.resolved) return false;
   r.resolved = true;
   clearTimers(id);
-  emitEvent("Incident", "Incident", "update", { id, status: "Resolved" });
+  const existing = getEntity("Incident", "Incident", id) || {};
+  emitEvent("Incident", "Incident", "update", { ...existing, id, status: "Resolved" });
+  return true;
+}
+
+export function escalateIncident(id) {
+  const r = runtime.get(id);
+  if (!r || r.resolved) return false;
+  // Progress escalation level or just mark it escalated
+  const existing = getEntity("Incident", "Incident", id) || {};
+  let nextLevel = "SupervisorEscalated";
+  if (existing.escalationLevel === "SupervisorEscalated") nextLevel = "PlantManagerEscalated";
+  
+  emitEvent("Incident", "Incident", "update", { ...existing, id, escalationLevel: nextLevel });
+  return true;
+}
+
+export function silenceAlert(id) {
+  const r = runtime.get(id);
+  if (!r || r.resolved) return false;
+  const existing = getEntity("Incident", "Incident", id) || {};
+  emitEvent("Incident", "Incident", "update", { ...existing, id, escalationLevel: "Acknowledged" }); // treat as acked
+  return true;
+}
+
+export function openIncident(details) {
+  const id = createIncident({
+    severity: details.severity || "Advisory",
+    zoneId: details.zoneId || "zone-furnace-bay",
+    workerIds: details.workerIds || [],
+    permitIds: details.permitIds || [],
+    riskScore: details.riskScore || 50,
+    confidenceScore: 1.0,
+  });
+  return id;
+}
+
+export function closeIncident(id) {
+  return resolveIncident(id);
+}
+
+export function dispatchResponse(id) {
+  const r = runtime.get(id);
+  if (!r || r.resolved) return false;
+  const existing = getEntity("Incident", "Incident", id) || {};
+  // Dispatch doesn't have a direct field in Incident, but we can emit a Recommendation
+  emitEvent("Incident", "Recommendation", "create", {
+    id: `rec-dispatch-${id}-${Date.now()}`,
+    incidentId: id,
+    content: "Response team dispatched by Operator.",
+    acknowledged: false,
+  });
   return true;
 }
 

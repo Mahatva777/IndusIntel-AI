@@ -20,6 +20,8 @@ export const SERVICE_NAMES = [
   "Camera",
   "DigitalTwin",
   "SystemHealth",
+  "CV",
+  "RAG",
 ];
 
 /** How many events per service are kept around to serve §4.17.7 partial-resync range requests. */

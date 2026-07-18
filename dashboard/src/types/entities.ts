@@ -58,6 +58,7 @@ export type IncidentStatus = "Active" | "Resolved" | "Archived";
 
 export interface Incident {
   readonly id: IncidentId;
+  name?: string;
   severity: IncidentSeverity;
   status: IncidentStatus;
   /** Alarm Priority is a pure function of severity (§8.10) — always derive, never set independently. */
@@ -124,6 +125,7 @@ export interface TelemetryReading {
   readonly equipmentId: EquipmentId;
   readonly zoneId: ZoneId;
   value: number;
+  severity?: string;
   readonly timestamp: string; // immutable per Appendix A
 }
 

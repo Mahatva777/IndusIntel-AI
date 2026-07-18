@@ -1,4 +1,27 @@
-# Industrial Safety Dashboard — Project Scaffold
+# Industrial Dashboard Scaffold
+
+## Running the App
+
+To run the complete dev environment (frontend + mock streaming server):
+
+1. **Start the Mock Server:**
+   ```bash
+   cd mock-server
+   npm install
+   npm start
+   ```
+   This will start the WebSocket live stream on `ws://localhost:8080` and the HTTP Resync/Debug server on `http://localhost:8081`.
+
+2. **Start the Vite Frontend:**
+   In a separate terminal, run:
+   ```bash
+   npm install
+   npm run dev
+   ```
+   The dashboard will be available at `http://localhost:5173`. The application shell will automatically connect to the mock WebSocket server.
+
+This folder contains the scaffolding produced from `FRONTEND_ENGINEERING_SPEC.md`
+(Sections 8, 9, 16, and the Appendix A entity/id contract).
 
 React 18 + TypeScript, Zustand, native WebSocket, Recharts, Tailwind CSS, Vite.
 

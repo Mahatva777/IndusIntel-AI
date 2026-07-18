@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ConnectionManager, type ConnectionTransport } from "../connectionManager";
-import type { ConnectionPhase } from "../types";
+import { ConnectionManager, type ConnectionTransport } from "./connectionManager";
+import type { ConnectionPhase } from "./types";
 
 class FakeTransport implements ConnectionTransport {
   private closeHandler: ((reason: unknown) => void) | null = null;

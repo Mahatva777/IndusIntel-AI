@@ -36,6 +36,11 @@ export function nextSequence(service) {
   return s.sequence;
 }
 
+export function getEntity(service, entityType, id) {
+  const bucket = services.get(service).entitiesByType.get(entityType);
+  return bucket ? bucket.get(id) : null;
+}
+
 export function recordEvent(service, envelope) {
   const s = services.get(service);
   s.log.push(envelope);

@@ -5,9 +5,16 @@ import {
   acknowledgeIncident,
   listActiveIncidents,
   resolveIncident,
+  escalateIncident,
+  silenceAlert,
+  closeIncident,
+  openIncident,
+  dispatchResponse,
   triggerIncidentLifecycleDemo,
   triggerPrimaryIncidentChangeDemo,
 } from "./incidentScenarios.js";
+import { getEntity } from "./state.js";
+import { emitEvent } from "./emit.js";
 
 function readJsonBody(req) {
   return new Promise((resolve, reject) => {
@@ -26,8 +33,17 @@ function readJsonBody(req) {
 }
 
 function send(res, status, body) {
-  res.writeHead(status, { "Content-Type": "application/json" });
-  res.end(JSON.stringify(body, null, 2));
+  res.writeHead(status, { 
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type"
+  });
+  if (body) {
+    res.end(JSON.stringify(body, null, 2));
+  } else {
+    res.end();
+  }
 }
 
 function requireService(res, service) {
@@ -98,6 +114,111 @@ export function startDebugServer({ forceDisconnectAll, connectedCount }) {
       if (req.method === "POST" && url.pathname === "/debug/primary-incident-change") {
         const firstIncidentId = triggerPrimaryIncidentChangeDemo();
         return send(res, 200, { ok: true, firstIncidentId, note: "a Critical incident becomes Primary, then an Emergency incident in another zone takes over 5s later" });
+      }
+
+      if (req.method === "POST" && url.pathname.startsWith("/api/action/")) {
+        const correlationId = req.headers["x-correlation-id"];
+        if (!correlationId) {
+          return send(res, 400, { error: "Missing X-Correlation-ID header" });
+        }
+        
+        const action = url.pathname.replace("/api/action/", "");
+        
+        // Helper for CAS
+        const enforceCAS = (entityType, serviceName, id, field, expectedValue) => {
+          const entity = getEntity(serviceName, entityType, id);
+          if (!entity) return { error: "Not found", status: 404 };
+          if (entity[field] !== expectedValue) {
+            return { error: { classification: "Concurrency", isVersionConflict: true }, status: 409 };
+          }
+          return { entity, status: 200 };
+        };
+
+        if (action === "acknowledge-alert") {
+          const { incidentId } = body;
+          const ok = acknowledgeIncident(incidentId);
+          return send(res, ok ? 200 : 404, { success: ok, correlationId });
+        }
+        
+        if (action === "escalate-incident") {
+          const { incidentId, expectedEscalationLevel } = body;
+          const cas = enforceCAS("Incident", "Incident", incidentId, "escalationLevel", expectedEscalationLevel);
+          if (cas.status !== 200) return send(res, cas.status, cas.error);
+          
+          escalateIncident(incidentId);
+          return send(res, 200, { success: true, correlationId });
+        }
+        
+        if (action === "silence-alert") {
+          const { incidentId } = body;
+          silenceAlert(incidentId);
+          return send(res, 200, { success: true, correlationId });
+        }
+
+        if (action === "open-incident") {
+          const { details } = body;
+          const newIncidentId = openIncident(details);
+          return send(res, 200, { success: true, newIncidentId, correlationId });
+        }
+
+        if (action === "close-incident") {
+          const { incidentId } = body;
+          const ok = closeIncident(incidentId);
+          return send(res, ok ? 200 : 404, { success: ok, correlationId });
+        }
+
+        if (action === "dispatch-response") {
+          const { incidentId } = body;
+          const ok = dispatchResponse(incidentId);
+          return send(res, ok ? 200 : 404, { success: ok, correlationId });
+        }
+
+        if (action === "suspend-permit") {
+          const { permitId, expectedStatus } = body;
+          const cas = enforceCAS("Permit", "Permit", permitId, "status", expectedStatus);
+          if (cas.status !== 200) return send(res, cas.status, cas.error);
+          
+          emitEvent("Permit", "Permit", "update", { ...cas.entity, status: "Suspended" });
+          return send(res, 200, { success: true, correlationId });
+        }
+
+        if (action === "resume-permit") {
+          const { permitId, expectedStatus } = body;
+          const cas = enforceCAS("Permit", "Permit", permitId, "status", expectedStatus);
+          if (cas.status !== 200) return send(res, cas.status, cas.error);
+          
+          emitEvent("Permit", "Permit", "update", { ...cas.entity, status: "Active" });
+          return send(res, 200, { success: true, correlationId });
+        }
+
+        if (action === "worker-notes") {
+          const { workerId, note } = body;
+          const worker = getEntity("Worker", "Worker", workerId);
+          if (!worker) return send(res, 404, { error: "Worker not found" });
+          // Note doesn't technically mutate worker object fields in this schema, but let's simulate updating
+          // or just pretend it persisted
+          return send(res, 200, { success: true, correlationId });
+        }
+
+        return send(res, 404, { error: "Unknown action" });
+      }
+
+      if (req.method === "POST" && url.pathname === "/debug/error") {
+        let body = "";
+        req.on("data", chunk => { body += chunk.toString(); });
+        req.on("end", () => {
+          console.log("[FRONTEND ERROR]", body);
+          res.writeHead(200); res.end("OK");
+        });
+        return;
+      }
+
+      if (req.method === "POST" && url.pathname === "/debug/start-csv-demo") {
+        const { stopBackgroundGenerators } = await import("./generators.js");
+        const { startCsvDemo } = await import("./csvScenario.js");
+        stopBackgroundGenerators();
+        startCsvDemo().catch(console.error);
+        return send(res, 200, { ok: true, note: "stopped random generators and started CSV telemetry/cv stream" });
       }
 
       if (req.method === "POST" && url.pathname === "/debug/acknowledge-incident") {

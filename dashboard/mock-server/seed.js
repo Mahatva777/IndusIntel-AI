@@ -36,6 +36,8 @@ export const PERMITS = [
 export const CAMERAS = [
   { id: "camera-1", zoneId: "zone-furnace-bay", name: "Furnace Bay North", status: "Active" },
   { id: "camera-2", zoneId: "zone-loading-dock", name: "Loading Dock East", status: "Active" },
+  { id: "camera-3", zoneId: "zone-compressor-room", name: "Compressor Room South", status: "Active" },
+  { id: "camera-4", zoneId: "zone-furnace-bay", name: "Furnace Bay West", status: "Active" },
 ];
 
 export const BACKEND_SERVICES = [

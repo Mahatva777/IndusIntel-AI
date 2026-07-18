@@ -11,8 +11,8 @@
  * owning service/store may update a slice."
  */
 import { getAllEntities, type EntityStoreState } from "@shared/normalization";
-import type { Incident, Permit, ServiceHealthSnapshot, Worker, Zone } from "../../state-layer/src/types/entities";
-import type { IncidentId, ZoneId } from "../../state-layer/src/types/ids";
+import type { Incident, Permit, ServiceHealthSnapshot, Worker, Zone } from "../types/entities";
+import type { IncidentId, ZoneId } from "../types/ids";
 
 import { useIncidentStoreState } from "@domain/incident/store";
 import { useWorkerStoreState } from "@domain/worker/store";
@@ -22,7 +22,7 @@ import { useTelemetryMapState } from "@domain/telemetry/store";
 import { useSystemHealthStoreState } from "@domain/system-health/store";
 import { useSelectionState } from "@ui-state/selection/store";
 
-import { compareIncidentPriority, isActiveIncident, selectPrimaryIncident } from "./incidentPriority";
+import { compareIncidentPriority, isActiveIncident, selectPrimaryIncident } from "./incident-logic/prioritization";
 import { memoize } from "./memoize";
 
 // ---------------------------------------------------------------------------
@@ -270,7 +270,7 @@ export interface DashboardStatus {
   readonly degradedServices: readonly string[];
 }
 
-function operationalStateForIncident(incident: Incident | undefined): DashboardOperationalState {
+function operationalStateForIncident(incident: Incident | null | undefined): DashboardOperationalState {
   if (!incident) return "Normal";
   if (incident.severity === "Emergency") return "Emergency";
   if (incident.severity === "Critical") return "Elevated";
@@ -304,4 +304,4 @@ export function useDashboardStatus(): DashboardStatus {
 }
 
 /** Convenience re-export — §8.6 Primary Incident is the anchor for several derived selectors above. */
-export { selectPrimaryIncident } from "./incidentPriority";
+export { selectPrimaryIncident } from "./incident-logic/prioritization";

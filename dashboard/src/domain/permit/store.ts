@@ -51,3 +51,8 @@ export function useAllPermits(): Permit[] {
 export function usePermitStoreState(): EntityStoreState<Permit> {
   return usePermitInternalStore((state) => state.permits);
 }
+
+/** Non-reactive snapshot of internal state — for write-path CAS reads (§6.6). */
+export function getPermitStoreSnapshot(): PermitInternalState {
+  return usePermitInternalStore.getState();
+}

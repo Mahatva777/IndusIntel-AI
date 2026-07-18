@@ -85,6 +85,11 @@ export function useAllIncidents(): Incident[] {
   return useIncidentInternalStore((state) => getAllEntities(state.incidents));
 }
 
+/** Non-reactive read for tests and external non-React consumers */
+export function getAllIncidentsSnapshot(): Incident[] {
+  return getAllEntities(useIncidentInternalStore.getState().incidents);
+}
+
 export function useRecommendation(id: RecommendationId): Recommendation | undefined {
   return useIncidentInternalStore((state) => getEntity(state.recommendations, id));
 }
@@ -104,4 +109,9 @@ export function useAllEvidence(): Evidence[] {
 /** Raw normalized state, for use by the derived selectors module only (§2.9). */
 export function useIncidentStoreState(): IncidentInternalState {
   return useIncidentInternalStore((state) => state);
+}
+
+/** Non-reactive snapshot of internal state — for write-path CAS reads (§6.6). */
+export function getIncidentStoreSnapshot(): IncidentInternalState {
+  return useIncidentInternalStore.getState();
 }

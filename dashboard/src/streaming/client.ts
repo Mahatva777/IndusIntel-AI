@@ -9,6 +9,7 @@ import { ConnectionManager, type ConnectionTransport, type HeartbeatConfig, type
 import { ResyncCoordinator, type ResyncCoordinatorEvents, type ResyncTransport } from "./resyncCoordinator";
 import { SequenceTracker, type SequenceTrackerConfig } from "./sequenceTracker";
 import { createPriorityScheduler, type PriorityQueueConfig, type PriorityScheduler } from "./backpressure";
+import { setServiceHealth } from "@domain/system-health/store";
 import { SERVICE_NAMES, type ConnectionPhase, type EventEnvelope, type ServiceName } from "./types";
 
 /** Raw wire message before envelope validation — same shape as `EventEnvelope` but untrusted. */
@@ -81,6 +82,14 @@ export class StreamingClient {
       deps.connectionTransport,
       {
         synchronize: () => this.resyncCoordinator.fullResync("reconnect"),
+        onPhaseChange: (phase: ConnectionPhase) => {
+          setServiceHealth({
+            service: "Network",
+            status: phase === "Live" ? "online" : "offline",
+            lastUpdated: new Date().toISOString(),
+            latencyMs: null,
+          });
+        },
       },
       config.reconnectPolicy,
       config.heartbeat,

@@ -23,4 +23,13 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  test: {
+    environment: "jsdom",
+    css: false,
+    server: {
+      deps: {
+        inline: [/@csstools/, /@asamuzakjp/],
+      },
+    },
+  },
 });

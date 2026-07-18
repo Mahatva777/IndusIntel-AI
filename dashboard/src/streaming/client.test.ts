@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { StreamingClient, type StreamingClientDeps } from "../client";
-import type { ConnectionTransport } from "../connectionManager";
-import type { ResyncTransport } from "../resyncCoordinator";
-import { SERVICE_NAMES, type EventEnvelope, type ServiceEventRange, type ServiceName, type ServiceSnapshot } from "../types";
+import { StreamingClient, type StreamingClientDeps } from "./client";
+import type { ConnectionTransport } from "./connectionManager";
+import type { ResyncTransport } from "./resyncCoordinator";
+import type { SequenceTracker } from "./sequenceTracker";
+import { SERVICE_NAMES, type EventEnvelope, type ServiceEventRange, type ServiceName, type ServiceSnapshot } from "./types";
 
 import { getAllIncidentsSnapshot, resetIncidentStore } from "@domain/incident/store";
 import type { Incident, IncidentId } from "@domain/incident/types";
@@ -19,6 +20,10 @@ function makeIncident(sequenceId: number): Incident {
     workerIds: [],
     permitIds: [],
     createdAt: new Date(sequenceId * 1000).toISOString(),
+    acknowledgedBy: null,
+    resolvedAt: null,
+    evidenceIds: [],
+    recommendationIds: [],
   };
 }
 

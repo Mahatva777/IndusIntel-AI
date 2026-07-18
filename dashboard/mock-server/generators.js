@@ -106,7 +106,18 @@ export function seedInitialState() {
   for (const service of BACKEND_SERVICES) emitEvent("SystemHealth", "ServiceHealthSnapshot", "create", { service, status: "online" });
 }
 
+let backgroundGeneratorsCleanup = null;
+
 export function startBackgroundGenerators() {
+  if (backgroundGeneratorsCleanup) return backgroundGeneratorsCleanup;
   const timers = [startTelemetry(), startWorker(), startSystemHealth(), startPermit(), startCamera(), startDigitalTwin()];
-  return () => timers.forEach(clearInterval);
+  backgroundGeneratorsCleanup = () => timers.forEach(clearInterval);
+  return backgroundGeneratorsCleanup;
+}
+
+export function stopBackgroundGenerators() {
+  if (backgroundGeneratorsCleanup) {
+    backgroundGeneratorsCleanup();
+    backgroundGeneratorsCleanup = null;
+  }
 }
