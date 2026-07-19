@@ -41,13 +41,14 @@ export function ActivePermitsPanel() {
               <div className="flex items-center gap-2">
                 <Typo level={5} className="font-mono font-bold text-[var(--color-text-primary)]">{permit.id}</Typo>
                 <Badge type="status">{permit.type || 'Permit'}</Badge>
+                <Badge type="numeric">{permit.equipmentId}</Badge>
               </div>
               <StatusBadge status={permit.status} variant="pill" />
             </div>
             
             <div className="flex items-center justify-between mt-1">
               <Typo level={6} className="font-mono text-[var(--color-text-secondary)] uppercase text-xs">
-                {String(permit.zoneId || 'Zone N/A')}
+                {String(permit.zoneId || 'Zone N/A')} | Worker: {String(permit.workerId)}
               </Typo>
               <div className="flex gap-4">
                 {permit.gasTestRequired && permit.gasTestValidity && (

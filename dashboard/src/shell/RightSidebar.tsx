@@ -23,12 +23,12 @@ export function RightSidebar() {
       </PanelSlot>
 
       {/* P4: Active Permits - Fixed compact height */}
-      <PanelSlot panelId="active-permits" priority={4} className="h-[150px] shrink-0">
+      <PanelSlot panelId="active-permits" priority={4} className="h-[250px] shrink-0">
         <ActivePermitsPanel />
       </PanelSlot>
 
       {/* P2: Recommendations */}
-      <PanelSlot panelId="recommendations" priority={2} className="flex-[2] min-h-0 overflow-hidden">
+      <PanelSlot panelId="recommendations" priority={2} className="flex-[1.5] min-h-0 overflow-hidden">
         <RecommendationPanel />
       </PanelSlot>
     </aside>
