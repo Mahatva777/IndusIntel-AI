@@ -64,7 +64,7 @@ export function WorkerPanel() {
   // --- Empty state ---
   if (workers.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-4">
+      <div className="flex flex-col items-center justify-center h-full p-4 bg-[var(--color-surface-panel)] rounded-lg overflow-hidden border border-[var(--color-border-subtle)]">
         <Typo level={5} className="text-slate-500">No workers on site</Typo>
         <Typo level={6} className="text-slate-600 mt-1">
           Worker data will appear when available.
@@ -78,7 +78,7 @@ export function WorkerPanel() {
       role="region"
       aria-label="Worker Panel — on-site workers and notes"
       aria-roledescription="Worker status panel"
-      className={`flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-severity-advisory rounded-lg transition-opacity duration-300 ${!infrastructureHealthy ? "opacity-60 saturate-50" : ""}`}
+      className={`flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-severity-advisory rounded-lg transition-opacity duration-300 bg-[var(--color-surface-panel)] overflow-hidden border border-[var(--color-border-subtle)] ${!infrastructureHealthy ? "opacity-60 saturate-50" : ""}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--color-border-subtle)]">

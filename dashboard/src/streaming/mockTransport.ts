@@ -1,6 +1,6 @@
 import { ConnectionTransport } from "./connectionManager";
 import { ResyncTransport } from "./resyncCoordinator";
-import { EventEnvelope, ServiceEventRange, ServiceName, ServiceSnapshot } from "./types";
+import { ServiceEventRange, ServiceName, ServiceSnapshot } from "./types";
 
 export class MockTransport implements ConnectionTransport, ResyncTransport {
   private ws: WebSocket | null = null;

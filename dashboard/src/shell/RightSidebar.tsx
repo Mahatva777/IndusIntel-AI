@@ -6,45 +6,30 @@
  *
  * Under constrained space, P5 panels collapse first per §16.6.
  */
-import { useLayoutState } from "./LayoutContext";
 import { PanelSlot } from "./PanelSlot";
 import { AlertQueue } from "../panels/alert-queue/AlertQueue";
-import { SystemHealthPanel } from "../panels/system-health/SystemHealthPanel";
-import { SensorPanel } from "../panels/sensor/SensorPanel";
+import { ActivePermitsPanel } from "../panels/permit/ActivePermitsPanel";
+import { RecommendationPanel } from "../panels/recommendation/RecommendationPanel";
 
 export function RightSidebar() {
-  const { operationalState } = useLayoutState();
-
   return (
     <aside className="
       flex flex-col gap-2
-      w-72 shrink-0
-      overflow-y-auto
+      h-full overflow-hidden
     ">
-      {/* P3: Alert Queue — §9.5 "Scroll to primary incident" during emergency */}
-      <PanelSlot panelId="alert-queue" priority={3} className="flex-[2] min-h-[200px]">
+      {/* P3: Alert Queue */}
+      <PanelSlot panelId="alert-queue" priority={3} className="flex-[3] min-h-0 overflow-hidden">
         <AlertQueue />
       </PanelSlot>
 
-      {/* P5: System Health — collapses first under constrained space */}
-      <PanelSlot
-        panelId="system-health"
-        priority={5}
-        className={`
-          flex-1 min-h-[100px]
-          ${operationalState === "Emergency" ? "max-h-[120px]" : ""}
-        `}
-      >
-        <SystemHealthPanel />
+      {/* P4: Active Permits - Fixed compact height */}
+      <PanelSlot panelId="active-permits" priority={4} className="h-[150px] shrink-0">
+        <ActivePermitsPanel />
       </PanelSlot>
 
-      {/* P6: Metadata — lowest priority, hidden first */}
-      <PanelSlot
-        panelId="sensor-panel"
-        priority={6}
-        className={`flex-1 min-h-[150px] ${operationalState === "Emergency" ? "hidden" : ""}`}
-      >
-        <SensorPanel />
+      {/* P2: Recommendations */}
+      <PanelSlot panelId="recommendations" priority={2} className="flex-[2] min-h-0 overflow-hidden">
+        <RecommendationPanel />
       </PanelSlot>
     </aside>
   );

@@ -20,7 +20,6 @@ import { LayoutProvider } from "./LayoutContext";
 import { EmergencyBanner } from "./EmergencyBanner";
 import { OfflineBanner } from "./OfflineBanner";
 import { GlobalStatusBar } from "./GlobalStatusBar";
-import { NavigationRail } from "./NavigationRail";
 import { MainWorkspace } from "./MainWorkspace";
 import { useSelectionState } from "../ui-state/selection/store";
 
@@ -55,7 +54,7 @@ export function DashboardShell() {
       <div
         data-state={layoutState.operationalState.toLowerCase()}
         className={`
-          min-h-screen flex flex-col
+          h-screen overflow-y-auto overflow-x-hidden flex flex-col
           bg-[var(--color-surface-base)] text-[var(--color-text-primary)]
           font-industrial
           ${layoutState.operationalState === "Emergency"
@@ -74,8 +73,7 @@ export function DashboardShell() {
         <GlobalStatusBar />
 
         {/* Main content area */}
-        <div className="flex flex-1 overflow-hidden">
-          <NavigationRail />
+        <div className="flex flex-1">
           <MainWorkspace />
         </div>
       </div>

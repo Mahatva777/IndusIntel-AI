@@ -59,7 +59,7 @@ export function SensorPanel() {
             <Typo level={6} className="text-slate-500">No sensor data available.</Typo>
           </div>
         ) : (
-          <div className="flex flex-col gap-1">
+          <div className="grid grid-cols-2 gap-2">
             {sensors.map((reading) => {
               const colorClass = SEVERITY_COLORS[reading.severity || "Normal"] || "text-teal-400";
               return (
@@ -67,15 +67,15 @@ export function SensorPanel() {
                   key={reading.sensorId} 
                   className="flex justify-between items-center bg-slate-800/50 p-2 rounded border border-slate-700 hover:border-slate-500 transition-colors"
                 >
-                  <div className="flex flex-col">
-                    <Typo level={6} className="font-medium text-slate-200">
+                  <div className="flex flex-col min-w-0">
+                    <Typo level={6} className="font-medium text-slate-200 truncate">
                       {reading.sensorId}
                     </Typo>
-                    <span className="text-[10px] text-slate-400 font-mono truncate max-w-[120px]">
+                    <span className="text-[10px] text-slate-400 font-mono truncate">
                       {reading.zoneId || "Unknown Zone"}
                     </span>
                   </div>
-                  <div className="flex flex-col items-end">
+                  <div className="flex flex-col items-end shrink-0 ml-2">
                     <span className={`text-sm font-mono font-bold ${colorClass}`}>
                       {reading.value.toFixed(2)}
                     </span>

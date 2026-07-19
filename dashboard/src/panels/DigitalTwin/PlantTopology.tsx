@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useEffect } from "react";
 import { useAllZones } from "../../../src/domain/zone/store";
 import { useWorker } from "../../../src/domain/worker/store";
 import { useSelectionState } from "../../../src/ui-state/selection/store";
@@ -99,7 +99,7 @@ interface ZoneShapeProps {
   focusIndex: number;
 }
 
-const ZoneShape: React.FC<ZoneShapeProps> = React.memo(({ zone, isSelected, onClick, focusIndex }) => {
+const ZoneShape: React.FC<ZoneShapeProps> = React.memo(({ zone, isSelected, onClick }) => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();

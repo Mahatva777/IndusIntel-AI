@@ -36,15 +36,16 @@ interface TypoProps {
   readonly level: TypoLevel;
   readonly children: React.ReactNode;
   readonly className?: string;
+  readonly title?: string;
   /** Override the default semantic HTML element. */
   readonly as?: keyof React.JSX.IntrinsicElements;
 }
 
 export const Typo: React.FC<TypoProps> = React.memo(
-  ({ level, children, className = "", as }) => {
+  ({ level, children, className = "", title, as }) => {
     const Tag = (as ?? LEVEL_TAG[level]) as React.ElementType;
     return (
-      <Tag className={`font-industrial ${LEVEL_CLASSES[level]} ${className}`}>
+      <Tag title={title} className={`font-industrial ${LEVEL_CLASSES[level]} ${className}`.trim()}>
         {children}
       </Tag>
     );

@@ -76,11 +76,11 @@ export function AlertQueue() {
       role="region"
       aria-label="Alert Queue — active and archived incidents"
       aria-roledescription="Incident alert queue"
-      className={`flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-severity-advisory rounded-lg transition-opacity duration-300 ${!infrastructureHealthy ? "opacity-60 saturate-50 pointer-events-none" : ""}`}
+      className={`flex flex-col h-full focus:outline-none focus:ring-1 focus:ring-severity-advisory rounded-none border border-[var(--color-border-primary)] bg-[var(--color-surface-base)] transition-opacity duration-300 ${!infrastructureHealthy ? "opacity-60 saturate-50 pointer-events-none" : ""}`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--color-border-subtle)] shrink-0">
-        <Typo level={3}>Alert Queue</Typo>
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--color-border-primary)] shrink-0 bg-[var(--color-surface-elevated)]">
+        <Typo level={3} className="font-mono uppercase tracking-wider text-xs">Alert Queue</Typo>
         <div className="flex items-center gap-2">
           <Badge type="numeric">{visibleIncidents.length}</Badge>
           {operationalState !== "Normal" && (
@@ -207,24 +207,24 @@ const IncidentRow = forwardRef<HTMLButtonElement, IncidentRowProps>(
         aria-current={isSelected ? "true" : undefined}
         role="listitem"
         className={`
-          w-full text-left rounded-lg border px-3 transition-all
-          focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400
+          w-full text-left rounded-none border px-3 transition-all
+          focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-400
           ${isPrimary
-            ? "py-3 bg-severity-emergency/5 border-severity-emergency/20"
+            ? "py-3 bg-[var(--color-severity-emergency)]/5 border-[var(--color-severity-emergency)]"
             : isAcknowledged
               ? isSelected
-                ? "py-2 bg-slate-700/50 border-slate-500 opacity-90"
-                : "py-2 bg-slate-800/30 border-slate-700 opacity-70 hover:bg-slate-800/50"
+                ? "py-2 bg-[var(--color-surface-elevated)] border-[var(--color-border-primary)]"
+                : "py-2 bg-transparent border-transparent hover:border-[var(--color-border-primary)]"
               : isSelected
-                ? "py-2 bg-slate-700/50 border-slate-500"
-                : "py-2 bg-slate-800/50 border-slate-700 hover:bg-slate-700/50"
+                ? "py-2 bg-[var(--color-surface-elevated)] border-[var(--color-border-primary)]"
+                : "py-2 bg-transparent border-transparent hover:border-[var(--color-border-primary)]"
           }
         `}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <SeverityIndicator severity={incident.severity} compact={!isPrimary} />
-            <Typo level={isPrimary ? 4 : 5} className="text-slate-200 truncate max-w-[200px]" title={incident.name || incident.id}>
+            <Typo level={isPrimary ? 4 : 5} className="text-[var(--color-text-primary)] font-mono uppercase tracking-wider truncate max-w-[200px]" title={incident.name || incident.id}>
               {incident.name || incident.id}
             </Typo>
             <Badge type="severity">{priority}</Badge>
@@ -234,7 +234,7 @@ const IncidentRow = forwardRef<HTMLButtonElement, IncidentRowProps>(
           </div>
 
           <div className="flex items-center gap-2">
-            <Typo level={6} className="text-slate-500">
+            <Typo level={6} className="text-[var(--color-text-secondary)] font-mono uppercase tracking-wider">
               {String(incident.zoneId)}
             </Typo>
 
@@ -246,8 +246,8 @@ const IncidentRow = forwardRef<HTMLButtonElement, IncidentRowProps>(
                 tabIndex={3}
                 aria-label={`Acknowledge incident ${incident.id}`}
                 className="
-                  px-2 py-1 rounded text-type-6 font-semibold font-industrial
-                  bg-status-acknowledged/20 text-status-acknowledged
+                  px-2 py-1 rounded-none border border-[var(--color-border-primary)] text-xs font-semibold font-mono uppercase tracking-wider
+                  bg-[var(--color-status-acknowledged)]/20 text-[var(--color-status-acknowledged)]
                   hover:bg-status-acknowledged/30 transition-colors
                   disabled:opacity-40 disabled:cursor-not-allowed
                   focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400
@@ -286,7 +286,7 @@ const IncidentRow = forwardRef<HTMLButtonElement, IncidentRowProps>(
               Workers: {incident.workerIds.length}
             </Typo>
             <Typo level={6} className="text-slate-400">
-              Confidence: {(incident.confidenceScore * 100).toFixed(0)}%
+              Evidence: {incident.confidenceScore >= 0.8 ? "Very Strong" : incident.confidenceScore >= 0.6 ? "Strong" : incident.confidenceScore >= 0.4 ? "Moderate" : "Weak"}
             </Typo>
             {incident.permitIds.length > 0 && (
               <Badge type="warning">Permit Conflict</Badge>

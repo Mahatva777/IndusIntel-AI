@@ -9,36 +9,39 @@
  * §9.5: Worker Panel "Highlight affected workers" during emergency.
  * §9.5: CCTV "Focus linked camera" during emergency.
  */
-import { useLayoutState } from "./LayoutContext";
-import { PanelSlot } from "./PanelSlot";
 import { TimelinePanel } from "../panels/timeline/TimelinePanel";
 import { WorkerPanel } from "../panels/worker/WorkerPanel";
-import { PermitPanel } from "../panels/permit/PermitPanel";
+import { EvidenceChain } from "../panels/evidence-chain/EvidenceChain";
+import { SensorPanel } from "../panels/sensor/SensorPanel";
+import { SystemHealthPanel } from "../panels/system-health/SystemHealthPanel";
 
 export function BottomPanel() {
-  const { operationalState } = useLayoutState();
-  const isEmergency = operationalState === "Emergency";
-
   return (
-    <div className={`
-      flex gap-2 h-52 shrink-0
-      transition-all duration-[var(--anim-duration-emphasis)]
-      ${isEmergency ? "h-40" : "h-52"}
-    `}>
-      {/* P4: Timeline — always visible, §9.5 "Continue updating" */}
-      <PanelSlot panelId="timeline" priority={4} className="flex-[2]">
-        <TimelinePanel />
-      </PanelSlot>
+    <div className="flex flex-col gap-4 mt-4 border-t border-[var(--color-border-primary)] pt-4 pb-12 shrink-0">
+      
+      {/* Top Row: Live Telemetry & Evidence Chain */}
+      <div className="grid grid-cols-2 gap-4 min-h-[400px] max-h-[500px]">
+        <div className="min-w-0 min-h-0 h-full overflow-hidden">
+          <SensorPanel />
+        </div>
+        <div className="min-w-0 min-h-0 h-full overflow-hidden">
+          <EvidenceChain />
+        </div>
+      </div>
 
-      {/* P4: Worker Panel — §9.5 "Highlight affected workers" */}
-      <PanelSlot panelId="worker-panel" priority={4} className="flex-1">
-        <WorkerPanel />
-      </PanelSlot>
-
-      {/* P4: Permit Panel */}
-      <PanelSlot panelId="permit-panel" priority={4} className="flex-1">
-        <PermitPanel />
-      </PanelSlot>
+      {/* Bottom Row: Timeline, Workers, Plant Health */}
+      <div className="grid grid-cols-3 gap-4 min-h-[300px]">
+        <div className="min-w-0 min-h-0 h-full overflow-hidden">
+          <TimelinePanel />
+        </div>
+        <div className="min-w-0 min-h-0 h-full overflow-hidden">
+          <WorkerPanel />
+        </div>
+        <div className="min-w-0 min-h-0 h-full overflow-hidden">
+          <SystemHealthPanel />
+        </div>
+      </div>
+      
     </div>
   );
 }

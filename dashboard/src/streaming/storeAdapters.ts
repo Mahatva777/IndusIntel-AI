@@ -33,7 +33,7 @@ import type { Equipment } from "@domain/equipment/types";
 import type { DigitalTwin } from "@domain/digital-twin/types";
 import type { TelemetryReading } from "@domain/telemetry/types";
 import type { ServiceHealthSnapshot } from "@domain/system-health/types";
-import type { CvDetection, CvDetectionId } from "@domain/future-cv/types";
+import type { CvDetection } from "@domain/future-cv/types";
 import type { KnowledgeRecord } from "@domain/future-rag/types";
 
 export interface StoreAdapter {

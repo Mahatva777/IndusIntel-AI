@@ -45,20 +45,25 @@ export const StatusBadge: React.FC<StatusBadgeProps> = React.memo(
   ({ status, variant = "pill" }) => {
     const classes = STATUS_CLASS[status] ?? STATUS_CLASS.Unavailable;
 
+    const glyph = ["Escalated", "Suspended"].includes(status) ? "▲" : 
+                  ["Resolved", "Archived", "Closed"].includes(status) ? "■" : 
+                  ["Acknowledged"].includes(status) ? "◆" : "●";
+
     if (variant === "dot") {
       return (
         <span className="inline-flex items-center gap-1.5" aria-label={`Status: ${status}`}>
-          <span className={`inline-block h-2 w-2 rounded-full ${classes}`} aria-hidden="true" />
-          <span className="text-type-6 font-industrial text-slate-300">{status}</span>
+          <span className={`inline-flex items-center justify-center font-mono text-[10px] ${classes.split(' ')[1]}`} aria-hidden="true">{glyph}</span>
+          <span className="text-type-6 font-mono tracking-wider uppercase text-[var(--color-text-secondary)]">{status}</span>
         </span>
       );
     }
 
     return (
       <span
-        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-type-6 font-semibold font-industrial ${classes}`}
+        className={`inline-flex items-center gap-1.5 rounded-none border px-2 py-0.5 text-xs font-semibold font-mono tracking-wider uppercase ${classes}`}
         aria-label={`Status: ${status}`}
       >
+        <span className="text-[10px] opacity-80">{glyph}</span>
         {status}
       </span>
     );

@@ -1,22 +1,25 @@
 import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import readline from "node:readline";
 import { randomUUID } from "node:crypto";
 import { emitEvent } from "./emit.js";
 import { scaled } from "./config.js";
 import { createIncident, listActiveIncidents, clearTimers, clearAllTimers } from "./incidentScenarios.js";
-import { initRiskEngine, evaluateTelemetry, setRiskLogger } from "./riskEngine.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export async function startCsvDemo() {
   console.log("[csv-demo] Starting CSV demo stream...");
   
-  const filePath = "/Users/mahatva/Desktop/ET/data/telemetry2.csv";
+  const filePath = path.resolve(__dirname, "../../data/telemetry2.csv");
   if (!fs.existsSync(filePath)) {
     console.error(`[csv-demo] Could not find ${filePath}`);
     return;
   }
 
   // Setup Logging
-  const logPath = "/Users/mahatva/Desktop/ET/dashboard/mock-server/demo_run.log";
+  const logPath = path.resolve(__dirname, "./demo_run.log");
   const logStream = fs.createWriteStream(logPath, { flags: 'w' });
   const log = (msg) => {
     console.log(msg);
@@ -93,9 +96,11 @@ export async function startCsvDemo() {
       timestamp: new Date().toISOString()
     };
     
-    // Evaluate telemetry against dynamic Risk Engine to determine severity
-    const severity = evaluateTelemetry(telemetry);
-    telemetry.severity = severity || "Normal";
+    // The JS mock risk engine is DEPRECATED.
+    // In a real environment, this CSV demo runner is completely replaced by 
+    // the Python API SSE stream. This file is kept only if you still run 
+    // without the Python backend.
+    telemetry.severity = "Normal";
     
     emitEvent("Telemetry", "TelemetryReading", "create", telemetry);
     

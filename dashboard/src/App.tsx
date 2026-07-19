@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { DashboardShell } from "@shell/DashboardShell";
 import { StreamingClient } from "./streaming/client";
-import { MockTransport } from "./streaming/mockTransport";
+import { SseTransport } from "./streaming/sseTransport";
 import { ServiceName } from "./streaming/types";
 
 export default function App() {
@@ -12,7 +12,7 @@ export default function App() {
       return (raw.service as ServiceName) || null;
     };
 
-    const transport = new MockTransport();
+    const transport = new SseTransport();
 
     const client = new StreamingClient({
       connectionTransport: transport,

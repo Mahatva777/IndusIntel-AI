@@ -8,39 +8,27 @@
  *
  * §9.11 step 2: Dashboard Layout is a pure function of Operational State.
  */
-import { useLayoutState } from "./LayoutContext";
 import { PanelSlot } from "./PanelSlot";
 import { IncidentWorkspace } from "./IncidentWorkspace";
 import { RightSidebar } from "./RightSidebar";
 import { BottomPanel } from "./BottomPanel";
-import { CCTVPanel } from "../panels/cctv/CCTVPanel";
 
 export function MainWorkspace() {
-  const { panelsExpanded } = useLayoutState();
-
   return (
-    <main className="flex-1 flex flex-col gap-2 p-2 overflow-hidden">
-      {/* Top area: Digital Twin + Incident Workspace + Right Sidebar */}
-      <div className="flex gap-2 flex-1 min-h-0">
+    <main className="flex-1 flex flex-col gap-2 p-2 w-full max-w-full relative">
+      {/* Top area: Digital Twin (25%) + Incident Workspace (45%) + Right Sidebar (30%) */}
+      <div className="grid grid-cols-[25fr_45fr_30fr] gap-2 w-full h-[calc(100vh-60px)] shrink-0">
         {/* P3: Digital Twin — §9.5 "Highlight affected zone" during emergency */}
         <PanelSlot
           panelId="digital-twin"
           priority={3}
-          className={`
-            ${panelsExpanded ? "flex-1" : "flex-[1.5]"}
-            min-w-[300px]
-          `}
+          className="h-full overflow-hidden"
         />
 
-        {/* P5: CCTV in center */}
-        <PanelSlot panelId="cctv-panel" priority={5} className="flex-1 min-w-[300px]">
-          <CCTVPanel />
-        </PanelSlot>
-
-        {/* Incident Workspace: IncidentFocus (P1) + Recommendations (P2) + Evidence (P2) */}
+        {/* Center Column: Incident Workspace (IncidentFocus + CCTV) */}
         <IncidentWorkspace />
 
-        {/* Right Sidebar: AlertQueue (P3) + SystemHealth (P5) + Metadata (P6) */}
+        {/* Right Sidebar: AlertQueue (P3) + Permits + Recommendations (P2) */}
         <RightSidebar />
       </div>
 

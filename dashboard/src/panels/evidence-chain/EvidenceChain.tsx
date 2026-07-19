@@ -113,23 +113,41 @@ function EvidenceItem({
           </Typo>
         </div>
 
-        {/* Linked entity references */}
-        <div className="flex gap-3 mt-2">
-          {evidence.sensorId && (
-            <Typo level={6} className="text-severity-advisory">
-              Sensor: {evidence.sensorId}
+        {/* Linked entity references and real findings */}
+        <div className="flex flex-col gap-1 mt-2">
+          {evidence.ruleId && (
+            <Typo level={6} className="text-slate-300 font-medium">
+              Rule: {evidence.ruleId}
             </Typo>
           )}
-          {evidence.workerId && (
-            <Typo level={6} className="text-severity-warning">
-              Worker: {evidence.workerId}
+          {evidence.finding && (
+            <Typo level={6} className="text-slate-400">
+              {evidence.finding}
             </Typo>
           )}
-          {evidence.permitId && (
-            <Typo level={6} className="text-severity-critical">
-              Permit: {evidence.permitId}
+          {evidence.severityContribution !== undefined && (
+            <Typo level={6} className="text-severity-warning mt-1">
+              Severity Contribution: +{(evidence.severityContribution * 100).toFixed(1)}
             </Typo>
           )}
+          
+          <div className="flex gap-3 mt-1">
+            {evidence.sensorId && (
+              <Typo level={6} className="text-severity-advisory">
+                Sensor: {evidence.sensorId}
+              </Typo>
+            )}
+            {evidence.workerId && (
+              <Typo level={6} className="text-severity-warning">
+                Worker: {evidence.workerId}
+              </Typo>
+            )}
+            {evidence.permitId && (
+              <Typo level={6} className="text-severity-critical">
+                Permit: {evidence.permitId}
+              </Typo>
+            )}
+          </div>
         </div>
       </div>
     </div>

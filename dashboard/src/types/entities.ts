@@ -114,6 +114,11 @@ export interface Permit {
   status: PermitStatus;
   readonly workerId: WorkerId; // assigned at issue, immutable per Appendix A
   equipmentId: EquipmentId;
+  zoneId?: ZoneId | string;
+  type?: string;
+  gasTestRequired?: boolean;
+  gasTestValidity?: string;
+  expiresAt?: string;
 }
 
 /**
@@ -167,6 +172,9 @@ export interface Evidence {
   readonly sensorId: SensorId | null;
   readonly workerId: WorkerId | null;
   readonly permitId: PermitId | null;
+  readonly ruleId?: string;
+  readonly finding?: string;
+  readonly severityContribution?: number;
 }
 
 /** §4.6/§4.17.1 Timeline Event envelope; Appendix A: append-only, never edited. */

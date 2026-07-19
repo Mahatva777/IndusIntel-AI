@@ -120,7 +120,11 @@ export function IncidentFocus() {
       <div className="grid grid-cols-4 gap-3">
         <MetricCard label="Zone" value={String(focusedIncident.zoneId)} />
         <MetricCard label="Risk Score" value={focusedIncident.riskScore.toFixed(1)} />
-        <MetricCard label="Confidence" value={`${(focusedIncident.confidenceScore * 100).toFixed(0)}%`} />
+        <MetricCard label="Evidence Strength" value={
+          focusedIncident.confidenceScore >= 0.8 ? "Very Strong" :
+          focusedIncident.confidenceScore >= 0.6 ? "Strong" :
+          focusedIncident.confidenceScore >= 0.4 ? "Moderate" : "Weak"
+        } />
         <MetricCard label="Workers at Risk" value={String(focusedIncident.workerIds.length)} highlight={focusedIncident.workerIds.length > 0} />
       </div>
 

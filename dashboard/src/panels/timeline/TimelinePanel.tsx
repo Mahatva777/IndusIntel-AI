@@ -44,7 +44,7 @@ const ENTITY_HEIGHTS: Record<string, string> = {
   System:    "h-1/3",
 };
 
-const MAX_RENDERED_EVENTS = 200;
+
 
 export function TimelinePanel() {
   const allEvents = useTimelineEvents();
@@ -135,7 +135,7 @@ export function TimelinePanel() {
   // --- Empty phase ---
   if (phase === "empty") {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-4">
+      <div className="flex flex-col items-center justify-center h-full p-4 bg-[var(--color-surface-panel)] rounded-lg overflow-hidden border border-[var(--color-border-subtle)]">
         <Typo level={5} className="text-slate-500">Timeline empty</Typo>
         <Typo level={6} className="text-slate-600 mt-1">
           Events will appear as they occur.
@@ -149,7 +149,7 @@ export function TimelinePanel() {
       role="region"
       aria-label="Timeline Panel — event replay and live event stream"
       aria-roledescription="Event timeline"
-      className="flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-severity-advisory rounded-lg"
+      className="flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-severity-advisory bg-[var(--color-surface-panel)] rounded-lg overflow-hidden border border-[var(--color-border-subtle)]"
     >
       {/* Header and playback controls */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--color-border-subtle)]">

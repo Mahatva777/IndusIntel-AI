@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StreamingClient, type StreamingClientDeps } from "./client";
 import type { ConnectionTransport } from "./connectionManager";
 import type { ResyncTransport } from "./resyncCoordinator";
-import type { SequenceTracker } from "./sequenceTracker";
 import { SERVICE_NAMES, type EventEnvelope, type ServiceEventRange, type ServiceName, type ServiceSnapshot } from "./types";
 
 import { getAllIncidentsSnapshot, resetIncidentStore } from "@domain/incident/store";

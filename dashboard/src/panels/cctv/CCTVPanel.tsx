@@ -13,158 +13,105 @@
  *
  * No write actions — camera state is read-only.
  */
-import { useEffect } from "react";
-import { useAllCameras } from "../../domain/camera/store";
+import { useState, useEffect } from "react";
 import { useLayoutState } from "../../shell/LayoutContext";
-import { useCrossPanelInteractions } from "../../shared/hooks/useCrossPanelInteractions";
-import { useSelectionState } from "../../ui-state/selection/store";
-import { useDashboardStatus } from "../../derived/selectors";
-import { Typo, StatusBadge, Badge } from "../../shared/ui";
-import type { Camera } from "../../types/entities";
+import { Typo } from "../../shared/ui";
+
+const ZONE_IDS = ["1", "2", "3", "4"];
 
 export function CCTVPanel() {
-  const cameras = useAllCameras();
-  const { primaryIncident, operationalState } = useLayoutState();
-  const { onCameraClick } = useCrossPanelInteractions();
-  const { selectedCameraId } = useSelectionState();
-  const { infrastructureHealthy } = useDashboardStatus();
+  const { primaryIncident } = useLayoutState();
+  const [layoutState, setLayoutState] = useState<"NORMAL" | "FOCUSED">("NORMAL");
+  const [focusedZone, setFocusedZone] = useState<string | null>(null);
+  const [lastAutoIncidentId, setLastAutoIncidentId] = useState<string | null>(null);
 
-  const isEmergency = operationalState === "Emergency" || operationalState === "Elevated";
-  const affectedZoneId = primaryIncident?.zoneId ?? null;
-
-  // §9.5: Auto-select the linked camera during emergencies
-  // "Auto Selection never overrides an active Manual Selection unless an Emergency occurs"
   useEffect(() => {
-    if (isEmergency && affectedZoneId) {
-      const linkedCamera = cameras.find(
-        (c) => c.zoneId === affectedZoneId && c.status === "Active",
-      );
-      if (linkedCamera && linkedCamera.id !== selectedCameraId) {
-        onCameraClick(linkedCamera.id);
+    if (primaryIncident && (primaryIncident.severity === "Critical" || primaryIncident.severity === "Emergency")) {
+      if (primaryIncident.id !== lastAutoIncidentId) {
+        setLastAutoIncidentId(primaryIncident.id);
+        setLayoutState("FOCUSED");
+        setFocusedZone(String(primaryIncident.zoneId));
       }
     }
-  }, [isEmergency, affectedZoneId, cameras, selectedCameraId, onCameraClick]);
+  }, [primaryIncident?.id, primaryIncident?.severity, primaryIncident?.zoneId, lastAutoIncidentId]);
 
-  // --- Empty state ---
-  if (cameras.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-4">
-        <Typo level={5} className="text-slate-500">No cameras available</Typo>
-        <Typo level={6} className="text-slate-600 mt-1">
-          Camera feeds will appear when available.
-        </Typo>
-      </div>
-    );
-  }
+  const handleThumbnailClick = (zoneId: string) => {
+    if (layoutState === "FOCUSED" && focusedZone === zoneId) {
+      setLayoutState("NORMAL");
+      setFocusedZone(null);
+    } else {
+      setLayoutState("FOCUSED");
+      setFocusedZone(zoneId);
+      // Mark as overridden so auto-trigger doesn't fight it if the same incident is still active
+      if (primaryIncident) {
+        setLastAutoIncidentId(primaryIncident.id);
+      }
+    }
+  };
 
-  const selectedCamera = cameras.find((c) => c.id === selectedCameraId);
+  const handleReset = () => {
+    setLayoutState("NORMAL");
+    setFocusedZone(null);
+    // Clear last incident so a NEW update to it doesn't get blocked? No, if we reset, we don't want it immediately re-triggering.
+    // Keeping lastAutoIncidentId means this specific incident won't re-trigger.
+  };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--color-border-subtle)]">
-        <Typo level={3}>CCTV</Typo>
-        <div className="flex items-center gap-2">
-          <Badge type="numeric">{cameras.length}</Badge>
-          {isEmergency && selectedCamera && (
-            <Badge type="severity">Auto-focused</Badge>
-          )}
-        </div>
+    <div className="flex flex-col h-full bg-[var(--color-surface-base)] border border-[var(--color-border-primary)] focus:outline-none">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--color-border-primary)] shrink-0 bg-[var(--color-surface-elevated)]">
+        <Typo level={3} className="font-mono uppercase tracking-wider text-xs">CCTV Feeds</Typo>
+        <button onClick={handleReset} className="px-2 py-0.5 border border-[var(--color-border-primary)] bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:text-white font-mono text-[10px] tracking-wider uppercase transition-colors">
+          ⊞ Reset Layout
+        </button>
       </div>
 
-      {/* Camera grid */}
-      <div className="flex-1 overflow-y-auto p-2">
-        <div className="grid grid-cols-2 gap-2">
-          {cameras.map((camera) => (
-            <CameraCard
-              key={camera.id}
-              camera={camera}
-              isSelected={camera.id === selectedCameraId}
-              isEmergencyLinked={isEmergency && camera.zoneId === affectedZoneId}
-              isNetworkOffline={!infrastructureHealthy}
-              onSelect={() => onCameraClick(camera.id === selectedCameraId ? "" : camera.id)}
-            />
-          ))}
+      <div className="flex-1 p-2 min-h-0 overflow-hidden relative">
+        <div className={`w-full h-full grid gap-2 transition-all duration-300 ${layoutState === "NORMAL" ? "grid-cols-2 grid-rows-2" : "grid-cols-[70%_1fr] grid-rows-3"}`}>
+          {ZONE_IDS.map(zoneId => {
+            const isFocused = layoutState === "FOCUSED" && focusedZone === zoneId;
+            const isThumbnail = layoutState === "FOCUSED" && focusedZone !== zoneId;
+            
+            return (
+              <button
+                key={zoneId}
+                onClick={() => handleThumbnailClick(zoneId)}
+                className={`
+                  relative border border-[var(--color-border-primary)] bg-slate-900 overflow-hidden text-left focus:outline-none focus:ring-1 focus:ring-severity-advisory
+                  ${isFocused ? "col-start-1 row-start-1 row-span-3 h-full" : ""}
+                  ${isThumbnail ? "col-start-2" : ""}
+                  hover:border-[var(--color-text-secondary)] transition-colors
+                `}
+              >
+                {/* Placeholder visual static pattern */}
+                <div 
+                  className="absolute inset-0 opacity-20 pointer-events-none mix-blend-screen"
+                  style={{
+                    backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.05) 2px, rgba(255,255,255,0.05) 4px)`
+                  }}
+                />
+                
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-3xl text-slate-700 opacity-50 mb-2">📹</span>
+                  <Typo level={5} className="font-mono text-slate-600 tracking-widest uppercase">No Signal</Typo>
+                </div>
+
+                <div className="absolute top-0 left-0 bg-black/60 px-2 py-1 border-b border-r border-[var(--color-border-primary)] flex items-center gap-2">
+                  <span className="inline-block w-2 h-2 bg-severity-emergency rounded-full animate-pulse" />
+                  <Typo level={6} className="font-mono text-[var(--color-text-primary)] uppercase text-[10px] tracking-wider">
+                    Z{zoneId}_CAM_01
+                  </Typo>
+                </div>
+                
+                <div className="absolute bottom-0 right-0 bg-black/60 px-2 py-1 border-t border-l border-[var(--color-border-primary)]">
+                  <Typo level={6} className="font-mono text-[var(--color-text-secondary)] uppercase text-[10px] tracking-wider">
+                    Zone {zoneId}
+                  </Typo>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
-
-      {/* Selected camera detail */}
-      {selectedCamera && (
-        <div className="px-3 py-2 border-t border-[var(--color-border-subtle)]">
-          <div className="flex items-center justify-between">
-            <Typo level={5} className="text-slate-200">
-              {selectedCamera.id} — Zone {String(selectedCamera.zoneId)}
-            </Typo>
-            <StatusBadge
-              status={!infrastructureHealthy || selectedCamera.status === "Unavailable" ? "Unavailable" : "Active"}
-              variant="pill"
-            />
-          </div>
-        </div>
-      )}
     </div>
-  );
-}
-
-function CameraCard({
-  camera,
-  isSelected,
-  isEmergencyLinked,
-  isNetworkOffline,
-  onSelect,
-}: {
-  camera: Camera;
-  isSelected: boolean;
-  isEmergencyLinked: boolean;
-  isNetworkOffline: boolean;
-  onSelect: () => void;
-}) {
-  const isOffline = isNetworkOffline || camera.status === "Unavailable";
-
-  return (
-    <button
-      onClick={onSelect}
-      className={`
-        relative rounded-lg border overflow-hidden
-        aspect-video
-        transition-all
-        ${isSelected
-          ? "ring-2 ring-severity-advisory border-severity-advisory/40"
-          : isEmergencyLinked
-            ? "ring-4 ring-severity-emergency border-severity-emergency shadow-[0_0_15px_rgba(239,68,68,0.5)]"
-            : "border-slate-700 hover:border-slate-500"
-        }
-      `}
-    >
-      {/* §1.6: Frame placeholder — video frames never enter state */}
-      <div className={`
-        absolute inset-0 flex items-center justify-center
-        ${isOffline ? "bg-slate-900" : "bg-slate-800"}
-      `}>
-        {isOffline ? (
-          /* Camera Offline placeholder */
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-2xl text-slate-600" aria-hidden="true">◉</span>
-            <StatusBadge status="Unavailable" variant="dot" />
-            <Typo level={6} className="text-slate-600">Camera Offline</Typo>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-2xl text-slate-500" aria-hidden="true">◉</span>
-            <Typo level={6} className="text-slate-500">Live Feed</Typo>
-          </div>
-        )}
-      </div>
-
-      {/* Camera ID overlay */}
-      <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-black/60">
-        <div className="flex items-center justify-between">
-          <Typo level={6} className="text-slate-300">{camera.id}</Typo>
-          {isEmergencyLinked && (
-            <span className="inline-block h-2 w-2 rounded-full bg-severity-emergency animate-attention" />
-          )}
-        </div>
-      </div>
-    </button>
   );
 }

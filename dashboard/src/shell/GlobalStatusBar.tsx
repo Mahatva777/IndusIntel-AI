@@ -64,10 +64,10 @@ export function GlobalStatusBar() {
 
         {/* Demo Trigger */}
         <button
-          onClick={() => fetch("http://localhost:8081/debug/start-csv-demo", { method: "POST" })}
+          onClick={() => window.location.reload()}
           className="px-3 py-1 rounded bg-blue-600 text-white font-industrial text-xs hover:bg-blue-500 transition-colors"
         >
-          Run CSV Demo
+          Restart Demo
         </button>
 
         {/* Global Search (§12.2 Search Worker) */}

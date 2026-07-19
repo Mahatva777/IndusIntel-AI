@@ -28,11 +28,11 @@ export const SeverityIndicator: React.FC<SeverityIndicatorProps> = React.memo(
     const config = SEVERITY_CONFIG[severity];
     return (
       <span
-        className={`inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-type-6 font-semibold font-industrial ${config.className}`}
+        className={`inline-flex items-center gap-1.5 rounded-none px-2 py-0.5 text-xs font-semibold font-mono tracking-wider uppercase border border-transparent ${config.className}`}
         role="img"
         aria-label={`Severity: ${config.label}`}
       >
-        <span aria-hidden="true">{config.icon}</span>
+        <span aria-hidden="true" className="text-[10px]">{config.icon}</span>
         {!compact && <span>{config.label}</span>}
       </span>
     );
