@@ -12,6 +12,7 @@ import { PanelSlot } from "./PanelSlot";
 import { IncidentWorkspace } from "./IncidentWorkspace";
 import { RightSidebar } from "./RightSidebar";
 import { BottomPanel } from "./BottomPanel";
+import { DigitalTwinPanel } from "../panels/digital-twin/DigitalTwinPanel";
 
 export function MainWorkspace() {
   return (
@@ -23,7 +24,9 @@ export function MainWorkspace() {
           panelId="digital-twin"
           priority={3}
           className="h-full overflow-hidden"
-        />
+        >
+          <DigitalTwinPanel />
+        </PanelSlot>
 
         {/* Center Column: Incident Workspace (IncidentFocus + CCTV) */}
         <IncidentWorkspace />

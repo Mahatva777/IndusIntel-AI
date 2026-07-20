@@ -1,14 +1,13 @@
 import { ConnectionTransport } from "./connectionManager";
 import { ResyncTransport } from "./resyncCoordinator";
-import { EventEnvelope, ServiceEventRange, ServiceName, ServiceSnapshot } from "./types";
+import { ServiceEventRange, ServiceName, ServiceSnapshot } from "./types";
 
 export class SseTransport implements ConnectionTransport, ResyncTransport {
   private eventSource: EventSource | null = null;
   private messageHandler: ((raw: unknown) => void) | null = null;
   private closeHandler: ((reason: unknown) => void) | null = null;
   private heartbeatAckHandler: (() => void) | null = null;
-  private requestCounter = 0;
-  private pendingRequests = new Map<string, { resolve: (data: any) => void; reject: (err: any) => void }>();
+
 
   async connect(): Promise<void> {
     return new Promise((resolve, reject) => {

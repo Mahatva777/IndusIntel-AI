@@ -132,6 +132,7 @@ async def stream_scenario(scenario_id: str):
                 if zid == "1": return "zone-furnace-bay"
                 if zid == "2": return "zone-loading-dock"
                 if zid == "3": return "zone-compressor-room"
+                if zid == "4": return "zone-valve-gallery"
                 return zid
                 
             from risk_engine.engine import _build_sensor_thresholds
@@ -257,6 +258,7 @@ async def stream_scenario(scenario_id: str):
                         "status": p_status,
                         "workerId": permit.workers_assigned[0] if permit.workers_assigned else "unknown",
                         "equipmentId": permit.equipment_id,
+                        "zoneId": map_zone(zone_context.zone_id),
                     }
                     p_msg = envelope("Permit", "Permit", permit_op, permit_payload, iso_time)
                     yield f"data: {json.dumps(p_msg)}\n\n"
