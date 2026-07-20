@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { ZONES } from "./zoneData";
+import { ZONES, ADJACENCY, EDGE_CONFIDENCE } from "./zoneData";
 
 /**
  * ZoneMap
@@ -58,6 +58,8 @@ export interface ZoneMapProps {
   permits?: PermitState[];
   /** Target rendered width in px. Height is derived from the data's aspect ratio. */
   containerWidth?: number;
+  /** Child elements to be rendered in the pannable space (e.g. evacuation paths) */
+  children?: React.ReactNode;
 }
 
 const CONTAINER_WIDTH_DEFAULT = 700;
@@ -264,13 +266,11 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
   workers = [],
   permits = [],
   containerWidth = CONTAINER_WIDTH_DEFAULT,
+  children,
 }) => {
-  // Derive scale factor from the data itself — never hardcode pixel positions.
-  const maxX = Math.max(...ZONES.map((z) => z.layout.x + z.layout.width));
-  const maxY = Math.max(...ZONES.map((z) => z.layout.y + z.layout.height));
-
-  const scale = containerWidth / maxX;
-  const containerHeight = Math.ceil(maxY * scale);
+  // Use fixed logical coordinates for graph
+  const CANVAS_WIDTH = 1200;
+  const CANVAS_HEIGHT = 1000;
 
   // Small uniform padding so tiles don't touch the panel edge.
   const PADDING = 16;
@@ -278,9 +278,31 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
   // Which zone's permit popover is currently open (at most one at a time).
   const [openPermitZoneId, setOpenPermitZoneId] = useState<string | null>(null);
 
-  // Group workers strictly by current_zone. Workers referencing a
-  // zone_id that doesn't exist in ZONES have no tile to render inside,
-  // so they are dropped rather than shown floating anywhere on the map.
+  // Pan state
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Only pan if clicking on the background, not on a card
+    if ((e.target as HTMLElement).getAttribute("data-pan-surface")) {
+      setIsPanning(true);
+      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isPanning) return;
+    setPan({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y,
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsPanning(false);
+  };
+
   const workersByZone = useMemo(() => {
     const knownZoneIds = new Set(ZONES.map((z) => z.zone_id));
     const grouped: Record<string, WorkerState[]> = {};
@@ -293,8 +315,6 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
     return grouped;
   }, [workers]);
 
-  // Filter to active permits, grouped by zone_id. Pending/closed permits
-  // never affect the badge.
   const activePermitsByZone = useMemo(() => {
     const grouped: Record<string, PermitState[]> = {};
     for (const zone of ZONES) grouped[zone.zone_id] = [];
@@ -306,27 +326,110 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
     return grouped;
   }, [permits]);
 
+  // Generate Edges
+  const edges = useMemo(() => {
+    const drawn = new Set<string>();
+    const edgeList: React.ReactNode[] = [];
+
+    ZONES.forEach((zone) => {
+      const neighbors = ADJACENCY[zone.zone_id] || [];
+      neighbors.forEach((neighborId) => {
+        const neighbor = ZONES.find((z) => z.zone_id === neighborId);
+        if (!neighbor) return;
+
+        // Ensure we only draw each undirected edge once
+        const edgeKey = [zone.zone_id, neighbor.zone_id].sort().join("-");
+        if (drawn.has(edgeKey)) return;
+        drawn.add(edgeKey);
+
+        const confidence = EDGE_CONFIDENCE[`${zone.zone_id}-${neighbor.zone_id}`] 
+                        || EDGE_CONFIDENCE[`${neighbor.zone_id}-${zone.zone_id}`] 
+                        || "high";
+                        
+        if (!EDGE_CONFIDENCE[`${zone.zone_id}-${neighbor.zone_id}`] && !EDGE_CONFIDENCE[`${neighbor.zone_id}-${zone.zone_id}`]) {
+          console.warn(`Missing EDGE_CONFIDENCE for ${zone.zone_id} and ${neighbor.zone_id}`);
+        }
+
+        const isDashed = confidence === "low";
+        
+        // Calculate dynamic perimeter connection points
+        const centerA = { x: zone.layout.x + zone.layout.width / 2, y: zone.layout.y + zone.layout.height / 2 };
+        const centerB = { x: neighbor.layout.x + neighbor.layout.width / 2, y: neighbor.layout.y + neighbor.layout.height / 2 };
+        
+        const dx = centerB.x - centerA.x;
+        const dy = centerB.y - centerA.y;
+        
+        const scaleXA = dx !== 0 ? (zone.layout.width / 2) / Math.abs(dx) : Infinity;
+        const scaleYA = dy !== 0 ? (zone.layout.height / 2) / Math.abs(dy) : Infinity;
+        const scaleA = Math.min(scaleXA, scaleYA);
+        const pointA = { x: centerA.x + dx * scaleA, y: centerA.y + dy * scaleA };
+        
+        const scaleXB = dx !== 0 ? (neighbor.layout.width / 2) / Math.abs(dx) : Infinity;
+        const scaleYB = dy !== 0 ? (neighbor.layout.height / 2) / Math.abs(dy) : Infinity;
+        const scaleB = Math.min(scaleXB, scaleYB);
+        // neighbor is back towards zone A, so subtract
+        const pointB = { x: centerB.x - dx * scaleB, y: centerB.y - dy * scaleB };
+
+        edgeList.push(
+          <line
+            key={edgeKey}
+            x1={pointA.x}
+            y1={pointA.y}
+            x2={pointB.x}
+            y2={pointB.y}
+            stroke="#3A3F44"
+            strokeWidth={3}
+            strokeDasharray={isDashed ? "8, 8" : "none"}
+          />
+        );
+      });
+    });
+
+    return edgeList;
+  }, []);
+
   return (
     <div
       style={{
-        display: "inline-block",
+        display: "block",
+        width: "100%",
+        height: "100%",
         background: PANEL_BG,
-        padding: PADDING,
         fontFamily:
           "'JetBrains Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace",
+        overflow: "hidden", // Clipping viewport
+        cursor: isPanning ? "grabbing" : "grab",
       }}
+      data-pan-surface="true"
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
     >
       <div
-        // Clicking empty space closes any open permit popover.
-        onClick={() => setOpenPermitZoneId(null)}
         style={{
           position: "relative",
-          width: containerWidth,
-          height: containerHeight,
-          backgroundColor: "#0F1113",
-          border: `1px solid ${GRID_LINE}`,
+          width: CANVAS_WIDTH,
+          height: CANVAS_HEIGHT,
+          transform: `translate(${pan.x}px, ${pan.y}px)`,
+          transition: isPanning ? "none" : "transform 0.1s ease-out",
         }}
       >
+        {/* SVG layer for graph edges */}
+        <svg
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            pointerEvents: "none",
+          }}
+        >
+          {edges}
+        </svg>
+
+        {/* Node Cards */}
         {ZONES.map((zone) => {
           const band = severities[zone.zone_id];
           const color = getColor(band);
@@ -334,21 +437,20 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
           const zoneActivePermits = activePermitsByZone[zone.zone_id] ?? [];
           const hasActivePermits = zoneActivePermits.length > 0;
 
-          const left = zone.layout.x * scale;
-          const top = zone.layout.y * scale;
-          const width = zone.layout.width * scale;
-          const height = zone.layout.height * scale;
-
           return (
             <div
               key={zone.zone_id}
               title={`${zone.name} — ${band ?? "UNKNOWN"}`}
+              onClick={(e) => {
+                e.stopPropagation(); // don't trigger pan
+                setOpenPermitZoneId(null);
+              }}
               style={{
                 position: "absolute",
-                left,
-                top,
-                width,
-                height,
+                left: zone.layout.x,
+                top: zone.layout.y,
+                width: zone.layout.width,
+                height: zone.layout.height,
                 boxSizing: "border-box",
                 backgroundColor: color.bg,
                 border: `1px solid ${color.border}`,
@@ -358,6 +460,7 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
+                cursor: "default",
               }}
             >
               <div
@@ -367,8 +470,6 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
                   letterSpacing: "0.02em",
                   lineHeight: 1.25,
                   flexShrink: 0,
-                  // Leave a little breathing room so the corner badge
-                  // never overlaps the zone name text.
                   paddingRight: hasActivePermits ? 14 : 0,
                 }}
               >
@@ -400,9 +501,7 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
                 {zoneWorkers.length > 0 ? ` · ${zoneWorkers.length} on site` : ""}
               </div>
 
-              {/* Permit badge: absolutely positioned, out of flow, so it
-                  never resizes or restructures the tile's base layout.
-                  Rendered only when the zone has 1+ active permits. */}
+              {/* Permit badge */}
               {hasActivePermits && (
                 <button
                   onClick={(e) => {
@@ -411,7 +510,7 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
                       current === zone.zone_id ? null : zone.zone_id
                     );
                   }}
-                  aria-label={`${zoneActivePermits.length} active permit(s) in ${zone.name} — show details`}
+                  aria-label={`${zoneActivePermits.length} active permit(s) in ${zone.name}`}
                   title={`${zoneActivePermits.length} active permit(s)`}
                   style={{
                     position: "absolute",
@@ -440,25 +539,20 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
           );
         })}
 
-        {/* Popover lives as a sibling of the tiles (not inside a tile's
-            overflow:hidden box) so it is never clipped, and is rendered
-            only for the single zone currently toggled open. */}
+        {/* Popover lives in the transformed coordinate space! */}
         {ZONES.map((zone) => {
           if (openPermitZoneId !== zone.zone_id) return null;
 
           const zoneActivePermits = activePermitsByZone[zone.zone_id] ?? [];
-          const tileLeft = zone.layout.x * scale;
-          const tileTop = zone.layout.y * scale;
-          const tileWidth = zone.layout.width * scale;
+          const tileLeft = zone.layout.x;
+          const tileTop = zone.layout.y;
+          const tileWidth = zone.layout.width;
 
-          // Prefer opening to the right of the tile; flip to the left if
-          // it would overflow the panel's right edge.
-          const wouldOverflowRight =
-            tileLeft + tileWidth + 8 + POPOVER_WIDTH > containerWidth;
+          const wouldOverflowRight = tileLeft + tileWidth + 8 + POPOVER_WIDTH > CANVAS_WIDTH;
           const popLeft = wouldOverflowRight
             ? Math.max(0, tileLeft - POPOVER_WIDTH - 8)
             : tileLeft + tileWidth + 8;
-          const popTop = Math.min(tileTop, Math.max(0, containerHeight - 220));
+          const popTop = Math.min(tileTop, Math.max(0, CANVAS_HEIGHT - 220));
 
           return (
             <PermitPopover
@@ -471,6 +565,7 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
             />
           );
         })}
+        {children}
       </div>
     </div>
   );

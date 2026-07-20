@@ -1,15 +1,3 @@
-/**
- * zoneData.ts
- *
- * Static reference data for plant zones.
- *
- * NOTE: This data is static and derived from plant layout drawings and
- * process/hazard reasoning — it is NOT sourced from live sensors, live
- * telemetry, or a real-time system. Treat ADJACENCY and EDGE_CONFIDENCE
- * in particular as a documented, human-derived approximation of zone
- * relationships, not a measured/verified graph.
- */
-
 export interface Zone {
   zone_id: string;
   name: string;
@@ -23,48 +11,6 @@ export interface Zone {
 
 export const ZONES: Zone[] = [
   {
-    zone_id: "zone-furnace-bay",
-    name: "Battery Top Deck",
-    parent_area: "Coke Oven Battery",
-    hazard_classification: "Toxic Gas / Heat",
-    ppe_required: "Helmet, FR overalls, goggles, half-mask respirator",
-    permit_required: "Hot Work",
-    evacuation_route: "North stairway to muster point A",
-    layout: { x: 50, y: 150, width: 300, height: 120 },
-  },
-  {
-    zone_id: "zone-loading-dock",
-    name: "Quench Area / Track",
-    parent_area: "Coke Handling",
-    hazard_classification: "Line-of-fire / Fire / Steam",
-    ppe_required: "Helmet, FR overalls, goggles, face shield",
-    permit_required: "Hot Work",
-    evacuation_route: "South walkway to muster point B",
-    layout: { x: 50, y: 300, width: 300, height: 120 },
-  },
-  {
-    zone_id: "zone-compressor-room",
-    name: "Basement Gas Valve Gallery",
-    parent_area: "Gas Distribution",
-    hazard_classification:
-      "Toxic Gas / Explosive Atmosphere / Confined Space",
-    ppe_required:
-      "Helmet, FR overalls, full-face respirator, SCBA for entry",
-    permit_required: "Confined Space, Gas Testing, Isolation",
-    evacuation_route: "Basement ladder to main corridor then muster point C",
-    layout: { x: 50, y: 450, width: 300, height: 120 },
-  },
-  {
-    zone_id: "zone-valve-gallery",
-    name: "Tar Extractor & By-Product Area",
-    parent_area: "By-Product Recovery",
-    hazard_classification: "Toxic Vapour (H2S/NH3) / Flammable",
-    ppe_required: "Helmet, FR overalls, half-mask respirator",
-    permit_required: "Hot Work, Working at Height",
-    evacuation_route: "Main structural walkway to muster point D",
-    layout: { x: 50, y: 600, width: 300, height: 120 },
-  },
-  {
     zone_id: "exit-north",
     name: "North Exit",
     parent_area: "External",
@@ -72,7 +18,47 @@ export const ZONES: Zone[] = [
     ppe_required: "None",
     permit_required: "None",
     evacuation_route: "Safe Zone",
-    layout: { x: 50, y: 10, width: 300, height: 60 },
+    layout: { x: 450, y: 20, width: 300, height: 60 },
+  },
+  {
+    zone_id: "zone-furnace-bay",
+    name: "Top deck (Z1)",
+    parent_area: "Coke Oven Battery",
+    hazard_classification: "Toxic gas / heat",
+    ppe_required: "Helmet, FR overalls, goggles, half-mask respirator",
+    permit_required: "Hot Work, Working at Height",
+    evacuation_route: "North stairway to muster point A",
+    layout: { x: 100, y: 150, width: 320, height: 120 },
+  },
+  {
+    zone_id: "zone-loading-dock",
+    name: "Quench / track (Z2)",
+    parent_area: "Coke Handling",
+    hazard_classification: "Fire / steam",
+    ppe_required: "Helmet, FR overalls, goggles, face shield",
+    permit_required: "Hot Work",
+    evacuation_route: "South walkway to muster point B",
+    layout: { x: 600, y: 300, width: 320, height: 120 },
+  },
+  {
+    zone_id: "zone-compressor-room",
+    name: "Valve gallery (Z3)",
+    parent_area: "Gas Distribution",
+    hazard_classification: "Gas / confined space",
+    ppe_required: "Helmet, FR overalls, full-face respirator, SCBA for entry",
+    permit_required: "Confined Space, Gas Testing, Isolation",
+    evacuation_route: "Basement ladder to main corridor then muster point C",
+    layout: { x: 200, y: 550, width: 320, height: 120 },
+  },
+  {
+    zone_id: "zone-valve-gallery",
+    name: "Tar extractor (Z4)",
+    parent_area: "By-Product Recovery",
+    hazard_classification: "Toxic vapour",
+    ppe_required: "Helmet, FR overalls, half-mask respirator",
+    permit_required: "Hot Work, Working at Height",
+    evacuation_route: "Main structural walkway to muster point D",
+    layout: { x: 700, y: 700, width: 320, height: 120 },
   },
   {
     zone_id: "exit-south",
@@ -82,7 +68,7 @@ export const ZONES: Zone[] = [
     ppe_required: "None",
     permit_required: "None",
     evacuation_route: "Safe Zone",
-    layout: { x: 50, y: 750, width: 300, height: 60 },
+    layout: { x: 300, y: 900, width: 300, height: 60 },
   }
 ];
 

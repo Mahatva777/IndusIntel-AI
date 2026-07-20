@@ -43,7 +43,6 @@ export function DigitalTwinPanel() {
   const { severities, workers, permits, connected } = snapshot;
 
   const [manualEvacuation, setManualEvacuation] = useState(false);
-  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -59,15 +58,6 @@ export function DigitalTwinPanel() {
     return () => observer.disconnect();
   }, []);
 
-  // Default the zone selector to the first worker seen in the live
-  // snapshot, once, the first time workers arrive — but don't fight the
-  // operator if they've since picked a different zone themselves.
-  useEffect(() => {
-    if (selectedZoneId === null && workers.length > 0) {
-      setSelectedZoneId(workers[0].current_zone);
-    }
-  }, [workers, selectedZoneId]);
-
   const anyZoneCritical = useMemo(
     () => Object.values(severities).some((band) => band === "CRITICAL"),
     [severities]
@@ -75,12 +65,7 @@ export function DigitalTwinPanel() {
 
   const evacuationActive = manualEvacuation || anyZoneCritical;
 
-  const evacuationResult = useMemo(() => {
-    if (!selectedZoneId) return null;
-    return computeEvacuation(selectedZoneId, severities);
-  }, [selectedZoneId, severities]);
-
-  // Distinct worker zone_ids present in the current snapshot, for the selector.
+  // Distinct worker zone_ids present in the current snapshot
   const knownWorkerZones = useMemo(() => {
     const seen = new Set<string>();
     const ordered: string[] = [];
@@ -113,22 +98,6 @@ export function DigitalTwinPanel() {
 
       {/* Evacuation controls */}
       <div className="relative z-10 flex items-center gap-3 px-3 py-2 border-b border-[var(--color-border-primary)] shrink-0 bg-[var(--color-surface-elevated)] font-mono text-xs">
-        <label className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] text-[var(--color-text-secondary)]">
-          Zone
-          <select
-            value={selectedZoneId ?? ""}
-            onChange={(e) => setSelectedZoneId(e.target.value)}
-            className="bg-[var(--color-surface-base)] border border-[var(--color-border-primary)] text-[var(--color-text-primary)] text-xs px-1 py-0.5"
-          >
-            {knownWorkerZones.length === 0 && <option value="">—</option>}
-            {knownWorkerZones.map((zoneId) => (
-              <option key={zoneId} value={zoneId}>
-                Zone {zoneId}
-              </option>
-            ))}
-          </select>
-        </label>
-
         <button
           onClick={() => setManualEvacuation((v) => !v)}
           className="px-2 py-1 border uppercase tracking-wider text-[10px]"
@@ -148,27 +117,29 @@ export function DigitalTwinPanel() {
         )}
       </div>
 
-      {/* Zone map + evacuation overlay, stacked with identical containerWidth so
-          the overlay's arrows/labels line up exactly with ZoneMap's tiles. */}
+      {/* Zone map + evacuation overlay, stacked. Overlay passed as children to pan together. */}
       <div className="relative z-10 flex-1 overflow-auto p-2 min-h-0" ref={containerRef}>
         {containerWidth > 0 && (
-          <div style={{ position: "relative", display: "inline-block" }}>
+          <div style={{ position: "relative", display: "inline-block", width: "100%", height: "100%" }}>
             <ZoneMap
               severities={severities}
               workers={workers}
               permits={permits}
               containerWidth={containerWidth}
-            />
-            {selectedZoneId && evacuationResult && (
-              <div style={{ position: "absolute", left: 0, top: 0 }}>
-                <EvacuationOverlay
-                  evacuationActive={evacuationActive}
-                  evacuationResult={evacuationResult}
-                  currentZone={selectedZoneId}
-                  containerWidth={containerWidth}
-                />
-              </div>
-            )}
+            >
+              {knownWorkerZones.map((zoneId) => {
+                const result = computeEvacuation(zoneId, severities);
+                if (!result) return null;
+                return (
+                  <EvacuationOverlay
+                    key={zoneId}
+                    evacuationActive={evacuationActive}
+                    evacuationResult={result}
+                    currentZone={zoneId}
+                  />
+                );
+              })}
+            </ZoneMap>
           </div>
         )}
       </div>
