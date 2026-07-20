@@ -93,3 +93,8 @@ export const EDGE_CONFIDENCE: Record<string, "high" | "medium" | "low"> = {
   "zone-compressor-room-exit-south": "high",
   "zone-loading-dock-exit-south": "low",
 };
+
+export function getZoneName(zoneId: string): string {
+  const z = ZONES.find((z) => z.zone_id === zoneId);
+  return z ? z.name : zoneId;
+}

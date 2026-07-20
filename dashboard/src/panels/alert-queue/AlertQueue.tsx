@@ -31,6 +31,7 @@ import {
 } from "../../shared/ui";
 import type { Incident } from "../../types/entities";
 import { alarmPriorityForSeverity } from "../../types/entities";
+import { getZoneName } from "../digital-twin/zoneData";
 
 export function AlertQueue() {
   const { primaryIncident, operationalState, emergencyBannerVisible } = useLayoutState();
@@ -235,7 +236,7 @@ const IncidentRow = forwardRef<HTMLButtonElement, IncidentRowProps>(
 
           <div className="flex items-center gap-2">
             <Typo level={6} className="text-[var(--color-text-secondary)] font-mono uppercase tracking-wider">
-              {String(incident.zoneId)}
+              {getZoneName(String(incident.zoneId))}
             </Typo>
 
             {/* Acknowledge — no confirmation (§6.4) */}

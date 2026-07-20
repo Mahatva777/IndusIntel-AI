@@ -24,6 +24,8 @@ import {
 } from "../../shared/ui";
 import { alarmPriorityForSeverity } from "../../types/entities";
 import type { EscalationLevel } from "../../types/entities";
+import type { Incident } from "../../types/entities";
+import { getZoneName } from "../digital-twin/zoneData";
 
 const ESCALATION_LABELS: Record<EscalationLevel, string> = {
   None:                  "None",
@@ -118,7 +120,7 @@ export function IncidentFocus() {
 
       {/* Metrics row */}
       <div className="grid grid-cols-4 gap-3">
-        <MetricCard label="Zone" value={String(focusedIncident.zoneId)} />
+        <MetricCard label="Zone" value={getZoneName(String(focusedIncident.zoneId))} />
         <MetricCard label="Risk Score" value={focusedIncident.riskScore.toFixed(1)} />
         <MetricCard label="Evidence Strength" value={
           focusedIncident.confidenceScore >= 0.8 ? "Very Strong" :

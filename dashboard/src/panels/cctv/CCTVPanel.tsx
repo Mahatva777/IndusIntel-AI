@@ -30,7 +30,15 @@ export function CCTVPanel() {
       if (primaryIncident.id !== lastAutoIncidentId) {
         setLastAutoIncidentId(primaryIncident.id);
         setLayoutState("FOCUSED");
-        setFocusedZone(String(primaryIncident.zoneId));
+        
+        const z = String(primaryIncident.zoneId);
+        let shortId = "1";
+        if (z.includes("furnace-bay")) shortId = "1";
+        else if (z.includes("loading-dock")) shortId = "2";
+        else if (z.includes("compressor-room")) shortId = "3";
+        else if (z.includes("valve-gallery")) shortId = "4";
+
+        setFocusedZone(shortId);
       }
     }
   }, [primaryIncident?.id, primaryIncident?.severity, primaryIncident?.zoneId, lastAutoIncidentId]);
@@ -90,10 +98,14 @@ export function CCTVPanel() {
                   }}
                 />
                 
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl text-slate-700 opacity-50 mb-2">📹</span>
-                  <Typo level={5} className="font-mono text-slate-600 tracking-widest uppercase">No Signal</Typo>
-                </div>
+                <video
+                  src={`/cctv/Z${zoneId}_CAM_01.${zoneId === "1" || zoneId === "2" ? "mp4" : "mov"}`}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover opacity-80"
+                />
 
                 <div className="absolute top-0 left-0 bg-black/60 px-2 py-1 border-b border-r border-[var(--color-border-primary)] flex items-center gap-2">
                   <span className="inline-block w-2 h-2 bg-severity-emergency rounded-full animate-pulse" />
