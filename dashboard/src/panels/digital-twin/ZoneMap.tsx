@@ -56,13 +56,9 @@ export interface ZoneMapProps {
   workers?: WorkerState[];
   /** Permits to evaluate; only status === "active" drives the badge, filtered per zone. */
   permits?: PermitState[];
-  /** Target rendered width in px. Height is derived from the data's aspect ratio. */
-  containerWidth?: number;
   /** Child elements to be rendered in the pannable space (e.g. evacuation paths) */
   children?: React.ReactNode;
 }
-
-const CONTAINER_WIDTH_DEFAULT = 700;
 
 // Flat, discrete severity palette. No interpolation between these values.
 const SEVERITY_COLORS: Record<SeverityBand, { bg: string; fg: string; border: string }> = {
@@ -81,9 +77,6 @@ const LABEL_MUTED = "#9AA3AB";
 // Flat chip colors. A worker whose medical_status is not "FIT" gets a
 // distinct flat border color so it reads immediately — still a single
 // solid color, not a gradient or glow.
-const CHIP_BG = "#0F1113";
-const CHIP_BORDER_NORMAL = "#54595F";
-const CHIP_BORDER_ALERT = "#D4483A";
 const CHIP_FG = "#E7EAED";
 
 // Permit badge / popover colors — deliberately distinct from the severity
@@ -265,15 +258,11 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
   severities,
   workers = [],
   permits = [],
-  containerWidth = CONTAINER_WIDTH_DEFAULT,
   children,
 }) => {
   // Use fixed logical coordinates for graph
   const CANVAS_WIDTH = 1200;
   const CANVAS_HEIGHT = 1000;
-
-  // Small uniform padding so tiles don't touch the panel edge.
-  const PADDING = 16;
 
   // Which zone's permit popover is currently open (at most one at a time).
   const [openPermitZoneId, setOpenPermitZoneId] = useState<string | null>(null);

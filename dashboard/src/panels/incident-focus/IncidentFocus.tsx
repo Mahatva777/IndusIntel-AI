@@ -24,7 +24,6 @@ import {
 } from "../../shared/ui";
 import { alarmPriorityForSeverity } from "../../types/entities";
 import type { EscalationLevel } from "../../types/entities";
-import type { Incident } from "../../types/entities";
 import { getZoneName } from "../digital-twin/zoneData";
 
 const ESCALATION_LABELS: Record<EscalationLevel, string> = {
