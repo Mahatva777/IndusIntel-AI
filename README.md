@@ -117,11 +117,5 @@ The **Alert Manager** applies cooldowns to prevent noise and statefully escalate
    npm run dev
    ```
 
-3. **Run the Mock Server (if applicable)**
-   ```bash
-   cd dashboard/mock-server
-   npm start
-   ```
-
-4. **View the Dashboard**
+3. **View the Dashboard**
    Open your browser to `http://localhost:5173` (or the port provided by Vite). The mock risk engine will immediately begin streaming telemetry and incidents.
