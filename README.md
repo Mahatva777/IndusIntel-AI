@@ -1,17 +1,16 @@
-# IndusIntel-AI: Industrial Safety Intelligence Platform
+# IndusIntel-AI: Agentic AI-Powered Industrial Safety Intelligence
 
-IndusIntel-AI is a real-time, digital twin and industrial safety intelligence platform designed to monitor hazardous environments. By fusing telemetry from IoT sensors, active work permits, and worker tracking data, the system proactively identifies emerging compound risks before they become critical safety incidents.
+IndusIntel-AI is an **Agentic AI-powered Industrial Safety Intelligence platform** that brings together data from IoT sensors, SCADA systems, permit-to-work logs, CCTV feeds, and shift records into a single predictive layer. Operating as a Multi-Agent System (MAS), it detects compound risk conditions—like the co-occurrence of maintenance activity and hazardous gas accumulation—that no single sensor would flag alone, triggering preemptive interventions before they escalate.
 
-## 🌟 Best Features
+## 🌟 Best Features (Agentic Capabilities)
 
-- **Live Sensor Monitoring**: Real-time telemetry from IoT sensors with configurable threshold tracking for hazardous gases, temperature, and pressure.
-- **Active Permit & Workers Monitoring**: Live tracking of "Hot Work", "Confined Space", and "Working at Height" permits alongside worker locations and medical statuses.
-- **Evidence Chain**: Append-only, chronological audit trail of incidents, transparently correlating multiple signals into a single compound risk picture.
-- **Actionable Recommendations**: Automated SOP (Standard Operating Procedure) generation for safety officers based on the severity and context of active incidents.
-- **Geospatial Heat Map (Digital Twin)**: Interactive 2D schematic of the physical plant (e.g., Furnace Bay, Valve Gallery) dynamically mapping hazard severities.
-- **Evacuation Protocol**: Dynamic pathfinding to safe exits that intelligently avoids routing workers through hazardous adjacent zones.
-- **CCTV Monitoring**: Live looping camera feeds that automatically reorganize to focus on the zone experiencing a critical incident.
-- **Worker Recognition & PPE Detection (CV Engine)**: Computer vision pipelines to detect PPE compliance (helmet, vest, gloves, mask, shoes) and unauthorized entry.
+- **Compound Risk Detection Engine**: A Multi-agent system that correlates gas sensor readings, work permit activity, equipment maintenance status, and shift changeover patterns to identify dangerous combinations (e.g., confined space entry during abnormal process conditions) hours before they become critical.
+- **Geospatial Safety Heatmap**: A real-time geospatial layer over the plant layout that visualises risk zones dynamically as conditions change—integrating worker location data, hazardous area classifications, and active permit overlaps to give safety officers situational awareness across the entire facility.
+- **Incident Pattern Intelligence**: A RAG-powered agent that cross-references near-miss reports, historical incident data, and OISD/Factory Act regulatory guidance to identify recurring patterns that manual investigations miss—and surfaces them as actionable prevention priorities.
+- **Digital Permit Intelligence Agent**: An AI that analyses active permits against real-time plant conditions and flags dangerous simultaneous operations (SIMOPS)—for example, hot work permits issued in proximity to areas with elevated gas readings.
+- **Emergency Response Orchestrator**: An autonomous agent that, on confirmed trigger, immediately initiates evacuation protocols, alerts response teams across channels, preserves sensor evidence, and generates a preliminary regulatory-compliant incident report.
+- **Quality & Compliance Audit Agent**: An AI layer that continuously monitors safety procedures, inspection records, and statutory compliance documentation against regulatory standards (OISD, DGMS), autonomously generating corrective action workflows.
+- **Computer Vision & CCTV Analytics**: Live looping camera feeds with CV pipelines to autonomously detect PPE compliance (helmet, vest, gloves) and unauthorized entry into restricted zones.
 
 ## 🏗 System Architecture
 
@@ -26,15 +25,19 @@ graph TD
         CV[CCTV / CV Engine]
     end
 
-    subgraph Backend - Risk Engine
-        RE[Rule Engine]
+    subgraph Backend - Agentic Risk Engine
+        RE[Multi-Agent Coordinator]
         FE[Fusion Engine]
         AM[Alert Manager]
+        RAG[Incident Pattern Agent]
+        ERO[Emergency Response Orchestrator]
         SSE[FastAPI SSE Server]
         
         RE -->|"Evaluates State"| FE
         FE -->|"Fuses Evidence"| AM
-        AM -->|"Prioritizes & Escalates"| SSE
+        AM <-->|"Queries"| RAG
+        AM -->|"Prioritizes & Escalates"| ERO
+        ERO -->|"Dispatches"| SSE
     end
 
     subgraph Frontend - Dashboard
@@ -106,12 +109,18 @@ flowchart LR
 ```mermaid
 flowchart LR
     Actor1([Safety Officer])
+    Agent1([Emergency Response Orchestrator])
+    Agent2([Compliance Audit Agent])
     
-    Actor1 --> UC1(Monitor Digital Twin & Heatmap)
-    Actor1 --> UC2(View Active Alerts & Incidents)
-    Actor1 --> UC3(Review Evidence Chain)
-    Actor1 --> UC4(Acknowledge Recommendations)
+    Actor1 --> UC1(Monitor Geospatial Safety Heatmap)
+    Actor1 --> UC2(View Compound Risk Alerts)
+    Actor1 --> UC3(Review RAG-enriched Incident Patterns)
     Actor1 --> UC5(Monitor CCTV Feeds)
+    
+    Agent2 --> UC4(Generate Corrective Action Workflows)
+    Actor1 --> UC4(Acknowledge Recommendations)
+    
+    Agent1 --> UC6(Trigger Evacuation & Dispatch Notifications)
     Actor1 --> UC6(Manage Evacuation Protocols)
 ```
 
@@ -120,10 +129,10 @@ flowchart LR
 The heart of IndusIntel-AI is its **Compound Risk Fusion** engine. Rather than relying on simple threshold alerts (which often lead to alarm fatigue), the engine contextualizes multiple data streams (e.g., elevated gas readings + active hot work permit in the same zone).
 
 ### Evidence Generation
-Each rule (sensor, permit, trend, worker) independently evaluates the plant state and produces **Evidence Fragments**. Each fragment acts as an immutable unit of risk evidence with a `severity_contribution` ranging from 0.0 to 1.0.
+Each autonomous detection agent (sensor, permit, trend, worker) independently evaluates the plant state and produces **Evidence Fragments**. Each fragment acts as an immutable unit of risk evidence with a `severity_contribution` ranging from 0.0 to 1.0.
 
 ### Risk Score Calculation (Noisy-OR Fusion)
-Instead of naive summation, the Fusion Engine uses a **Noisy-OR** probability model to combine severity scores across multiple independent rules. This ensures the score scales sensibly with the number and strength of independent signals, without exceeding 1.0.
+Instead of naive summation, the Fusion Engine uses a **Noisy-OR** probability model to combine severity scores across multiple independent agents. This ensures the score scales sensibly with the number and strength of independent signals, without exceeding 1.0.
 
 1. **Intra-Dimension Fusion**: Evidence is grouped by risk dimension (e.g., Worker, Equipment, Process). The combined score for a dimension is calculated as:  
    `Score = 1.0 - Π (1.0 - severity_i)`
@@ -135,7 +144,7 @@ Instead of naive summation, the Fusion Engine uses a **Noisy-OR** probability mo
    - `LOW`: < 0.25
 
 ### Escalation and Alerting
-The **Alert Manager** applies cooldowns to prevent noise and statefully escalates unacknowledged `HIGH` alerts to `CRITICAL` after a sustained period. A CRITICAL compound risk immediately triggers the **Evacuation Protocol**.
+The **Alert Manager** applies cooldowns to prevent noise and statefully escalates unacknowledged `HIGH` alerts to `CRITICAL` after a sustained period. A CRITICAL compound risk immediately triggers the **Emergency Response Orchestrator** to initiate evacuation protocols and dispatch notifications.
 
 ## 🚀 Getting Started
 
@@ -159,4 +168,4 @@ The **Alert Manager** applies cooldowns to prevent noise and statefully escalate
    ```
 
 4. **View the Dashboard**
-   Open your browser to `http://localhost:5173` (or the port provided by Vite). The mock risk engine will immediately begin streaming telemetry and incidents.
+   Open your browser to `http://localhost:5173`. The mock risk engine will immediately begin streaming telemetry and incidents.
