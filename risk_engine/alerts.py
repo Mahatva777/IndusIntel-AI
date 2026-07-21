@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 from typing import Optional, Sequence
 
 from risk_engine.models import CompoundRiskAssessment, RiskSeverityBand
+from risk_engine.rag import KnowledgeRetriever
 
 _DEFAULT_COOLDOWN_SECONDS = 10.0
 _DEFAULT_HIGH_ESCALATION_SECONDS = 20.0
@@ -61,6 +62,7 @@ class Alert:
     recommended_action: str
     evidence_summary: tuple[str, ...]
     assessment: CompoundRiskAssessment
+    precedent: tuple[str, ...] = field(default_factory=tuple)
 
 
 @dataclass(slots=True, frozen=True)
@@ -133,6 +135,7 @@ class AlertManager:
         self._last_alerted: dict[str, tuple[float, RiskSeverityBand]] = {}
         self._high_since: dict[str, float] = {}
         self._acknowledged: set[str] = set()
+        self._retriever = KnowledgeRetriever()
 
     def process(
         self, assessments: Sequence[CompoundRiskAssessment]
@@ -179,6 +182,7 @@ class AlertManager:
             recommended_action=assessment.recommended_action,
             evidence_summary=_evidence_summary(assessment),
             assessment=assessment,
+            precedent=self._retriever.retrieve(assessment.explanation),
         )
 
     def _effective_band(

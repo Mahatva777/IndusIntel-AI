@@ -18,7 +18,13 @@ logger = logging.getLogger(__name__)
 
 
 class RuleEngine:
-    """Orchestrates rules across snapshots.
+    """Multi-Agent Compound Risk Detection Coordinator.
+    
+    Each Rule subclass (GasAccumulationRule, ConfinedSpaceGasRule, 
+    WorkerInHazardousZoneRule, PPEViolationRule, GasRisingTrendRule, etc.) is an
+    independent agent that inspects one slice of plant state and reports findings
+    autonomously. RuleEngine coordinates their execution, while FusionEngine performs
+    multi-agent evidence fusion via noisy-OR.
 
     For every snapshot::
 

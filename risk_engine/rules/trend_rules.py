@@ -57,6 +57,8 @@ class StatefulRule(Protocol):
     blur that distinction for no benefit. A RuleEngine that wants to
     drive stateful rules checks `isinstance(rule, StatefulRule)` and
     calls update() before evaluate(); pure rules never see update().
+    
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
     """
 
     rule_id: str
@@ -85,6 +87,8 @@ class GasRisingTrendRule:
     on the *trajectory* -- it catches acceleration, which is what tells
     an operator "this is going to breach critical soon" rather than
     "this already breached warning".
+    
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
     """
 
     rule_id = "TREND_GAS_RISING"
@@ -163,6 +167,8 @@ class RapidEscalationRule:
     (up-down-up-down but net far higher) would never satisfy the strict
     "every step non-decreasing" check above, yet is just as dangerous --
     this rule looks only at the net displacement across the window.
+    
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
     """
 
     rule_id = "TREND_RAPID_ESCALATION"
@@ -238,6 +244,8 @@ class SustainedWarningRule:
     ordinary noise; a sensor stuck in WARN signals the plant has settled
     into a genuinely abnormal steady state -- something no single-point
     check can distinguish from a transient blip.
+    
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
     """
 
     rule_id = "TREND_SUSTAINED_WARNING"

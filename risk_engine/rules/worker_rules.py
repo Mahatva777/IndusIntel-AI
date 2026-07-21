@@ -80,7 +80,9 @@ class WorkerInHazardousZoneRule:
     """Fires when a worker is physically present in a zone where a gas
     sensor is above warning (or critical) threshold. Severity scales with
     the gas reading; the finding names the worker, zone, and hazard
-    together since none of those alone tells an operator who to evacuate."""
+    together since none of those alone tells an operator who to evacuate.
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
+    """
 
     rule_id = "WORKER_IN_HAZARDOUS_ZONE"
 
@@ -144,7 +146,9 @@ class WorkerInHazardousZoneRule:
 
 class PPEComplianceRule:
     """Fires when a present worker's PPE level is below what their zone's
-    ppe_required text implies is the minimum (see _minimum_ppe_level)."""
+    ppe_required text implies is the minimum (see _minimum_ppe_level).
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
+    """
 
     rule_id = "WORKER_PPE_COMPLIANCE"
 
@@ -185,7 +189,9 @@ class PPEComplianceRule:
 
 class UnauthorizedEntryRule:
     """Fires when a worker occupies a permit-required zone without being
-    named on any currently active permit for that zone."""
+    named on any currently active permit for that zone.
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
+    """
 
     rule_id = "WORKER_UNAUTHORIZED_ENTRY"
 

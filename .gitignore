@@ -1,1 +1,18 @@
 .venv
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Hackathon: Ignore test files and logs
+tests/
+test_api.py
+test_fusion.py
+test_stream.py
+test_validation.py
+risk_engine_output.txt
+
+# Keep docs out of git as requested
+docs/
+
+# Ignore deprecated mock server
+dashboard/mock-server/

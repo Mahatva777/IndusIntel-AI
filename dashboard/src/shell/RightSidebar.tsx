@@ -10,6 +10,7 @@ import { PanelSlot } from "./PanelSlot";
 import { AlertQueue } from "../panels/alert-queue/AlertQueue";
 import { ActivePermitsPanel } from "../panels/permit/ActivePermitsPanel";
 import { RecommendationPanel } from "../panels/recommendation/RecommendationPanel";
+import { OperationsNarrative } from "../panels/operations-narrative/OperationsNarrative";
 
 export function RightSidebar() {
   return (
@@ -30,6 +31,11 @@ export function RightSidebar() {
       {/* P2: Recommendations */}
       <PanelSlot panelId="recommendations" priority={2} className="flex-[1.5] min-h-0 overflow-hidden">
         <RecommendationPanel />
+      </PanelSlot>
+
+      {/* P6: Operations Narrative */}
+      <PanelSlot panelId="operations-narrative" priority={6} className="flex-[1.5] min-h-0 overflow-hidden">
+        <OperationsNarrative />
       </PanelSlot>
     </aside>
   );

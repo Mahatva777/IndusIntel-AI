@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from risk_engine.engine import RiskEngine
 from risk_engine.models import CompoundRiskAssessment, EvidenceFragment, RiskSeverityBand
 from risk_engine.alerts import Alert
+import risk_engine.agents as agents
 
 app = FastAPI(title="Risk Engine API")
 
@@ -138,6 +139,13 @@ async def stream_scenario(scenario_id: str):
             from risk_engine.engine import _build_sensor_thresholds
             thresholds = _build_sensor_thresholds(engine._config_loader)
             
+            # Emit Emergency Report (Agent)
+            if engine.emergency_history and engine.emergency_history[-1].timestamp == snapshot.timestamp:
+                emergency = engine.emergency_history[-1]
+                report = agents.emergency_response(emergency)
+                agent_msg = envelope("Agent", "EmergencyReport", "create", report, iso_time)
+                yield f"data: {json.dumps(agent_msg)}\n\n"
+            
             # Emit Telemetry
             for reading in snapshot.sensor_readings.values():
                 severity = "Normal"
@@ -217,7 +225,8 @@ async def stream_scenario(scenario_id: str):
                     "incidentId": incident_id,
                     "content": alert.recommended_action,
                     "createdAt": iso_time,
-                    "acknowledged": False
+                    "acknowledged": False,
+                    "precedent": alert.precedent
                 }
                 rec_msg = envelope("Incident", "Recommendation", "create", rec_payload, iso_time)
                 yield f"data: {json.dumps(rec_msg)}\n\n"
@@ -262,6 +271,18 @@ async def stream_scenario(scenario_id: str):
                     }
                     p_msg = envelope("Permit", "Permit", permit_op, permit_payload, iso_time)
                     yield f"data: {json.dumps(p_msg)}\n\n"
+                
+                # Compliance Agent check
+                compliance_findings = agents.compliance_check(zone_context)
+                if compliance_findings:
+                    comp_payload = {
+                        "id": f"comp-{zone_context.zone_id}-{snapshot.timestamp}",
+                        "zoneId": map_zone(zone_context.zone_id),
+                        "findings": list(compliance_findings),
+                        "timestamp": iso_time
+                    }
+                    comp_msg = envelope("Agent", "ComplianceFinding", "create", comp_payload, iso_time)
+                    yield f"data: {json.dumps(comp_msg)}\n\n"
                 
         # Send end signal
         yield f"data: {json.dumps({'type': 'end'})}\n\n"
