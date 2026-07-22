@@ -1,16 +1,11 @@
 """Computer-vision rules for the Risk Engine (risk_engine/rules/cv_rules.py).
 
 ============================================================================
-CV PIPELINE INTEGRATION GUIDE -- READ THIS BEFORE WRITING ANY CV CODE
+CV PIPELINE INTEGRATION -- YOLOv8 ENGINE
 ============================================================================
-The CV model does not exist yet. This module IS the contract it must
-satisfy -- it is a stub today and turns into live evidence with ZERO
-changes to the Risk Engine the moment your pipeline starts populating
-PlantSnapshot.cv_ppe_detections / snapshot.cv_events. That is the whole
-point of the CVPPEDetection / CVEvent shapes in risk_engine/models.py:
-they are an anti-corruption layer between your model internals and this
-codebase. Build to the shapes below, not to whatever your model's raw
-output tensor looks like.
+The CV model is implemented in cv_engine/ (inference.py, models/best.pt).
+This module provides rules evaluating PPE detections and restricted-zone
+entry events emitted into PlantSnapshot.cv_ppe_detections / snapshot.cv_events.
 
 1. CAMERA-TO-ZONE MAPPING (config/zones.csv `camera_id` column)
    ------------------------------------------------------------

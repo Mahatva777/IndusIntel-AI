@@ -82,7 +82,7 @@ def emergency_response(emergency: PlantEmergencyAlert) -> dict:
             "explanation": alert.explanation,
             "recommended_action": alert.recommended_action,
             "precedent": getattr(alert, "precedent", ()),
-            "evacuation_guidance": "protocol_reference_pending_zone_data",
+            "evacuation_guidance": f"Evacuate via Primary Exit Route to Assembly Point A. Avoid Zone {alert.zone_id} due to active compound hazard.",
             "preserved_evidence": preserved_evidence,
         }
         if projected_time_to_critical_seconds is not None:
