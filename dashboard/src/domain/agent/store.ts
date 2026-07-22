@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 export interface EmergencyReport {
+  disclaimer?: string;
   timestamp: number;
   summary: string;
   affected_zones: string[];

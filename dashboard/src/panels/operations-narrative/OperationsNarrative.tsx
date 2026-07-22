@@ -13,6 +13,9 @@ export function OperationsNarrative() {
         <Typo level={5} className="font-semibold text-slate-300">Emergency Response Orchestrator</Typo>
         {report ? (
           <div className="mt-2">
+            {report.disclaimer && (
+              <p className="text-xs italic text-slate-400 mb-3">{report.disclaimer}</p>
+            )}
             <Typo level={6} className="text-red-400">CRITICAL: {report.summary}</Typo>
             <div className="text-sm mt-2 text-slate-300">
               Affected Zones: {report.affected_zones.join(", ")}
@@ -22,6 +25,12 @@ export function OperationsNarrative() {
                 <strong className="text-slate-200">{a.title}</strong>
                 <p className="mt-1">{a.explanation}</p>
                 <p className="text-amber-500 mt-1">Action: {a.recommended_action}</p>
+                {a.projection_string && (
+                  <div className="mt-2 text-cyan-400 text-sm font-semibold bg-cyan-900/20 p-2 rounded border border-cyan-800/50 flex items-center gap-2">
+                    <span>⏱️</span>
+                    <span>{a.projection_string}</span>
+                  </div>
+                )}
                 {a.precedent && a.precedent.length > 0 && (
                   <div className="mt-2 text-slate-500 text-xs">
                     <em className="text-slate-400 font-semibold mb-1 block">RAG Precedent:</em>

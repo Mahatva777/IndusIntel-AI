@@ -181,7 +181,7 @@ export interface Evidence {
 export interface TimelineEvent {
   readonly id: TimelineEventId;
   readonly sequenceId: number;
-  readonly entityType: "Incident" | "Worker" | "Permit" | "Telemetry" | "Camera" | "System";
+  readonly entityType: "Incident" | "Worker" | "Permit" | "Telemetry" | "Camera" | "System" | "Agent";
   readonly entityId: string;
   readonly timestamp: string;
 }

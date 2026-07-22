@@ -204,7 +204,7 @@ const agentAdapter: StoreAdapter = {
       addComplianceFinding(event.payload as any);
     }
   },
-  applySnapshot(snapshot) {
+  applySnapshot(_snapshot) {
     // Bare-bones, no snapshot support needed for demo
   },
 };

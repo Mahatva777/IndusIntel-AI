@@ -127,7 +127,7 @@ class GasRisingTrendRule:
     @staticmethod
     def _is_rising(window: Deque[_Sample]) -> bool:
         values = [s.value for s in window]
-        return all(b >= a for a, b in zip(values, values[1:]))
+        return values[-1] > values[0]
 
     @staticmethod
     def _make_fragment(sensor_id: str, cfg: SensorThresholds, window: Deque[_Sample]):
@@ -155,6 +155,7 @@ class GasRisingTrendRule:
                 f"first_value={first.value}",
                 f"last_value={last.value}",
                 f"rate_per_second={rate}",
+                f"critical_max={cfg.critical_max}",
             ),
         )
 

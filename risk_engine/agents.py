@@ -47,7 +47,33 @@ def emergency_response(emergency: PlantEmergencyAlert) -> dict:
             }
             for frag in alert.assessment.evidence
         ]
-        zone_alerts.append({
+        projected_time_to_critical_seconds = None
+        projection_string = None
+        for frag in alert.assessment.evidence:
+            if frag.rule_id == "TREND_GAS_RISING":
+                try:
+                    rate = None
+                    last_val = None
+                    crit_max = None
+                    for ctx in frag.supporting_context:
+                        if ctx.startswith("rate_per_second="):
+                            rate = float(ctx.split("=")[1])
+                        elif ctx.startswith("last_value="):
+                            last_val = float(ctx.split("=")[1])
+                        elif ctx.startswith("critical_max="):
+                            crit_max = float(ctx.split("=")[1])
+                    if rate and rate > 0 and last_val is not None and crit_max is not None:
+                        if last_val < crit_max:
+                            secs = int((crit_max - last_val) / rate)
+                            projected_time_to_critical_seconds = secs
+                            mins = max(1, secs // 60)
+                            projection_string = f"At current rate, this reading may reach critical threshold in approximately {mins} simulated minutes if uncorrected."
+                        else:
+                            projection_string = f"This reading has already breached the critical threshold ({crit_max:.2f}) at current rate."
+                except Exception:
+                    pass
+
+        zone_dict = {
             "zone_id": alert.zone_id,
             "title": alert.title,
             "explanation": alert.explanation,
@@ -55,9 +81,16 @@ def emergency_response(emergency: PlantEmergencyAlert) -> dict:
             "precedent": getattr(alert, "precedent", ()),
             "evacuation_guidance": "protocol_reference_pending_zone_data",
             "preserved_evidence": preserved_evidence,
-        })
+        }
+        if projected_time_to_critical_seconds is not None:
+            zone_dict["projected_time_to_critical_seconds"] = projected_time_to_critical_seconds
+        if projection_string:
+            zone_dict["projection_string"] = projection_string
+            
+        zone_alerts.append(zone_dict)
         
     return {
+        "disclaimer": "This is a predictive alert generated from correlated sensor, permit, and equipment evidence. It indicates elevated compound risk conditions, not a confirmed injury, fatality, or equipment failure.",
         "timestamp": emergency.timestamp,
         "affected_zones": list(set(a.zone_id for a in emergency.zone_alerts)),
         "summary": emergency.summary,

@@ -7,6 +7,7 @@
  * §16 semantic rendering.
  */
 import React, { useState } from "react";
+import { useAllLatestTelemetry } from "../domain/telemetry/store";
 import { useDashboardStatus } from "../derived/selectors";
 import { useVisibleIncidents } from "../derived/selectors";
 import { useCrossPanelInteractions } from "../shared/hooks/useCrossPanelInteractions";
@@ -46,13 +47,18 @@ export function GlobalStatusBar() {
       shrink-0
     ">
       {/* Left: plant identity + operational state */}
-      <div className="flex items-center gap-3">
-        <Typo level={5} className="text-slate-200 font-semibold tracking-wider uppercase">
-          IndusIntel
-        </Typo>
-        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-type-6 font-semibold ${STATE_BADGE_CLASS[operationalState]}`}>
-          {operationalState}
-        </span>
+      <div className="flex flex-col justify-center">
+        <div className="flex items-center gap-3">
+          <Typo level={5} className="text-slate-200 font-semibold tracking-wider uppercase">
+            IndusIntel
+          </Typo>
+          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-type-6 font-semibold ${STATE_BADGE_CLASS[operationalState]}`}>
+            {operationalState}
+          </span>
+        </div>
+        {operationalState !== "Normal" && (
+          <span className="text-[10px] italic text-slate-400 mt-0.5">Predictive risk state — no confirmed incident</span>
+        )}
       </div>
 
       {/* Center: active incident count & Global Search */}
@@ -97,15 +103,19 @@ export function GlobalStatusBar() {
         </form>
       </div>
 
-      {/* Right: system health + clock */}
-      <div className="flex items-center gap-4">
+      {/* Right: system health + clocks */}
+      <div className="flex items-center gap-6">
         <StatusBadge
           status={infrastructureHealthy ? "Active" : "Unavailable"}
           variant="dot"
         />
-        <Typo level={6} className="tabular-nums text-slate-400">
-          <ClockDisplay />
-        </Typo>
+        <div className="flex items-center gap-4 border-l border-slate-700 pl-4">
+          <SimulatedTimeDisplay />
+          <Typo level={6} className="tabular-nums text-slate-400 flex flex-col items-end">
+            <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mb-0.5">Local Time</span>
+            <ClockDisplay />
+          </Typo>
+        </div>
       </div>
     </header>
   );
@@ -130,4 +140,28 @@ function ClockDisplay() {
   }, []);
 
   return <>{time.toLocaleTimeString()}</>;
+}
+
+/** Simulated plant time based on the latest streaming event timestamp. */
+function SimulatedTimeDisplay() {
+  const telemetry = useAllLatestTelemetry();
+  
+  const latestTimestamp = React.useMemo(() => {
+    if (!telemetry || telemetry.length === 0) return null;
+    let latest = 0;
+    for (const t of telemetry) {
+      if (t.timestamp) {
+        const dt = new Date(t.timestamp).getTime();
+        if (dt > latest) latest = dt;
+      }
+    }
+    return latest === 0 ? null : new Date(latest);
+  }, [telemetry]);
+
+  return (
+    <Typo level={6} className="tabular-nums text-slate-300 flex flex-col items-end">
+      <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mb-0.5">Plant Time</span>
+      <span>{latestTimestamp ? latestTimestamp.toLocaleTimeString() : "—"}</span>
+    </Typo>
+  );
 }

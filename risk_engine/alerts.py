@@ -148,7 +148,28 @@ class AlertManager:
             for assessment in assessments
             if (alert := self._process_one(assessment)) is not None
         )
-        return alerts, self._build_emergency(alerts)
+        
+        all_critical = []
+        for assessment in assessments:
+            band = self._effective_band(assessment.zone_id, assessment)
+            if band is RiskSeverityBand.CRITICAL and assessment.compound_risk_detected:
+                all_critical.append(
+                    Alert(
+                        alert_id=f"ALT_{assessment.zone_id}_{assessment.timestamp}",
+                        zone_id=assessment.zone_id,
+                        timestamp=assessment.timestamp,
+                        severity_band=band,
+                        is_compound=True,
+                        title=_build_title(assessment, band),
+                        explanation=assessment.explanation,
+                        recommended_action=assessment.recommended_action,
+                        evidence_summary=_evidence_summary(assessment),
+                        assessment=assessment,
+                        precedent=[],
+                    )
+                )
+                
+        return alerts, self._build_emergency(all_critical)
 
     def acknowledge(self, zone_id: str) -> None:
         """Record that an operator has acknowledged the current condition

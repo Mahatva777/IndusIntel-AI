@@ -130,7 +130,7 @@ async def stream_scenario(scenario_id: str):
         await asyncio.sleep(1.0)
         
         for snapshot, alerts in engine.stream(scenario_id):
-            await asyncio.sleep(1.0) # Tick pace
+            await asyncio.sleep(0.5) # Tick pace
             
             iso_time = f"2024-01-01T00:{int(snapshot.timestamp // 60):02d}:{int(snapshot.timestamp % 60):02d}Z"
             # Zone mapping for frontend compatibility
