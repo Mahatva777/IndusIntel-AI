@@ -261,14 +261,42 @@ export function TimelinePanel() {
 
 function EventDetail({ event }: { event: TimelineEvent }) {
   const colorClass = ENTITY_COLORS[event.entityType] ?? "bg-slate-500";
+  
+  const payload = (event as any).payload;
+  let eventSummary = "";
+  let projectionString = "";
+  
+  if (event.entityType === "Agent" && payload) {
+    eventSummary = payload.summary || "";
+    if (payload.alerts && Array.isArray(payload.alerts)) {
+      for (const a of payload.alerts) {
+        if (a.projection_string) {
+          projectionString = a.projection_string;
+          break;
+        }
+      }
+    }
+  }
+
   return (
-    <div className="flex items-center gap-3">
-      <span className={`inline-block h-2.5 w-2.5 rounded-full ${colorClass}`} />
-      <Typo level={5} className="text-slate-200">{event.entityType}</Typo>
-      <Typo level={6} className="text-slate-400">{event.entityId}</Typo>
-      <Typo level={6} className="text-slate-500 tabular-nums ml-auto">
-        {new Date(event.timestamp).toLocaleTimeString()}
-      </Typo>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-3">
+        <span className={`inline-block h-2.5 w-2.5 rounded-full ${colorClass}`} />
+        <Typo level={5} className="text-slate-200">{event.entityType}</Typo>
+        <Typo level={6} className="text-slate-400">{event.entityId}</Typo>
+        <Typo level={6} className="text-slate-500 tabular-nums ml-auto">
+          {new Date(event.timestamp).toLocaleTimeString()}
+        </Typo>
+      </div>
+      {eventSummary && (
+        <Typo level={6} className="text-red-400 mt-1">{eventSummary}</Typo>
+      )}
+      {projectionString && (
+        <div className="mt-1 text-cyan-400 text-[11px] font-semibold bg-cyan-900/20 px-2 py-1 flex items-center gap-1.5 rounded border border-cyan-800/50">
+          <span>⏱️</span>
+          <span>{projectionString}</span>
+        </div>
+      )}
     </div>
   );
 }

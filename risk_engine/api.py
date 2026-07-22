@@ -7,12 +7,33 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
+
+from pydantic import BaseModel
 
 from risk_engine.engine import RiskEngine
 from risk_engine.models import CompoundRiskAssessment, EvidenceFragment, RiskSeverityBand
 from risk_engine.alerts import Alert
+import risk_engine.agents as agents
 
 app = FastAPI(title="Risk Engine API")
+
+class NotificationModePayload(BaseModel):
+    mode: str
+
+@app.get("/api/notifications/mode")
+def get_notification_mode():
+    return {"mode": agents._notification_dispatcher.get_mode()}
+
+@app.post("/api/notifications/mode")
+def set_notification_mode(payload: NotificationModePayload):
+    updated_mode = agents._notification_dispatcher.set_mode(payload.mode)
+    return {"mode": updated_mode}
+
+outputs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "cv_engine", "outputs"))
+if os.path.exists(outputs_path):
+    app.mount("/cctv", StaticFiles(directory=outputs_path), name="cctv")
 
 app.add_middleware(
     CORSMiddleware,
@@ -66,7 +87,6 @@ def _serialize_assessment(a: CompoundRiskAssessment, iso_time: str, incident_id:
     }
     
     worker_ids = sorted(list({f.worker_id for f in a.evidence if f.worker_id}))
-    print(f"DEBUG: incident {incident_id} has worker_ids: {worker_ids}")
     permit_ids = sorted(list({f.equipment_id for f in a.evidence if f.source.name == "PERMIT_SYSTEM" and f.equipment_id}))
 
     return {
@@ -118,13 +138,16 @@ async def stream_scenario(scenario_id: str):
         emitted_workers = set()
         emitted_permits = set()
         
+        # Reset notification cooldowns when scenario stream restarts
+        agents._notification_dispatcher.reset_cooldown()
+        
         # The frontend ConnectionManager takes a few microtasks to transition
         # from Connecting -> Authenticating -> Synchronizing -> Live after onopen.
         # Delaying the first tick ensures no events are dropped.
         await asyncio.sleep(1.0)
         
         for snapshot, alerts in engine.stream(scenario_id):
-            await asyncio.sleep(1.0) # Tick pace
+            await asyncio.sleep(0.5) # Tick pace
             
             iso_time = f"2024-01-01T00:{int(snapshot.timestamp // 60):02d}:{int(snapshot.timestamp % 60):02d}Z"
             # Zone mapping for frontend compatibility
@@ -137,6 +160,13 @@ async def stream_scenario(scenario_id: str):
                 
             from risk_engine.engine import _build_sensor_thresholds
             thresholds = _build_sensor_thresholds(engine._config_loader)
+            
+            # Emit Emergency Report (Agent)
+            if engine.emergency_history and engine.emergency_history[-1].timestamp == snapshot.timestamp:
+                emergency = engine.emergency_history[-1]
+                report = agents.emergency_response(emergency)
+                agent_msg = envelope("Agent", "EmergencyReport", "create", report, iso_time)
+                yield f"data: {json.dumps(agent_msg)}\n\n"
             
             # Emit Telemetry
             for reading in snapshot.sensor_readings.values():
@@ -217,7 +247,8 @@ async def stream_scenario(scenario_id: str):
                     "incidentId": incident_id,
                     "content": alert.recommended_action,
                     "createdAt": iso_time,
-                    "acknowledged": False
+                    "acknowledged": False,
+                    "precedent": alert.precedent
                 }
                 rec_msg = envelope("Incident", "Recommendation", "create", rec_payload, iso_time)
                 yield f"data: {json.dumps(rec_msg)}\n\n"
@@ -259,9 +290,44 @@ async def stream_scenario(scenario_id: str):
                         "workerId": permit.workers_assigned[0] if permit.workers_assigned else "unknown",
                         "equipmentId": permit.equipment_id,
                         "zoneId": map_zone(zone_context.zone_id),
+                        "type": permit.permit_type,
                     }
                     p_msg = envelope("Permit", "Permit", permit_op, permit_payload, iso_time)
                     yield f"data: {json.dumps(p_msg)}\n\n"
+                
+                # Compliance Agent check
+                compliance_findings = agents.compliance_check(zone_context)
+                if compliance_findings:
+                    # Deterministic ID based on zone so it overwrites in UI instead of spamming
+                    base_id = f"comp-{zone_context.zone_id}"
+                    comp_payload = {
+                        "id": base_id,
+                        "zoneId": map_zone(zone_context.zone_id),
+                        "findings": list(compliance_findings),
+                        "timestamp": iso_time
+                    }
+                    comp_msg = envelope("Agent", "ComplianceFinding", "create", comp_payload, iso_time)
+                    yield f"data: {json.dumps(comp_msg)}\n\n"
+                    
+                    inc_payload = {
+                        "id": f"inc-{base_id}",
+                        "name": "Permit Breach Detected",
+                        "severity": "Low",
+                        "status": "Active",
+                        "zoneId": map_zone(zone_context.zone_id),
+                        "createdAt": iso_time,
+                        "riskScore": 15,
+                        "confidenceScore": 100,
+                        "escalationLevel": "None",
+                        "acknowledgedBy": None,
+                        "resolvedAt": None,
+                        "workerIds": [],
+                        "permitIds": [],
+                        "evidenceIds": [],
+                        "recommendationIds": []
+                    }
+                    inc_msg = envelope("Incident", "Incident", "create", inc_payload, iso_time)
+                    yield f"data: {json.dumps(inc_msg)}\n\n"
                 
         # Send end signal
         yield f"data: {json.dumps({'type': 'end'})}\n\n"

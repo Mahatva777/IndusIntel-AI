@@ -152,7 +152,9 @@ def _confidence_from_metadata(metadata: Mapping[str, str]) -> float:
 
 class PPEViolationRule:
     """Fires when a CVPPEDetection shows an item missing that the
-    detection's zone actually requires (per zones.csv ppe_required)."""
+    detection's zone actually requires (per zones.csv ppe_required).
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
+    """
 
     rule_id = "CV_PPE_VIOLATION"
 
@@ -204,7 +206,9 @@ class PPEViolationRule:
 
 class SmokeFireRule:
     """Fires on CVEvent(SMOKE_DETECTED | FIRE_DETECTED); always routed to
-    RiskDimension.EMERGENCY since neither is ever a "process" concern."""
+    RiskDimension.EMERGENCY since neither is ever a "process" concern.
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
+    """
 
     rule_id = "CV_SMOKE_FIRE_DETECTION"
     _EVENT_TYPES = frozenset({CVEventType.SMOKE_DETECTED, CVEventType.FIRE_DETECTED})
@@ -248,6 +252,8 @@ class UnauthorizedEntryDetectionRule:
     a restricted zone. They are DIFFERENT evidence, INTENTIONALLY not
     deduplicated here -- fusion (not this module) decides whether two
     fragments for the same worker/zone corroborate or double-count.
+    
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
     """
 
     rule_id = "CV_UNAUTHORIZED_ENTRY"

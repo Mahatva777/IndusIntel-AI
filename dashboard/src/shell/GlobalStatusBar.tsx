@@ -7,6 +7,7 @@
  * §16 semantic rendering.
  */
 import React, { useState } from "react";
+import { useAllLatestTelemetry } from "../domain/telemetry/store";
 import { useDashboardStatus } from "../derived/selectors";
 import { useVisibleIncidents } from "../derived/selectors";
 import { useCrossPanelInteractions } from "../shared/hooks/useCrossPanelInteractions";
@@ -46,13 +47,18 @@ export function GlobalStatusBar() {
       shrink-0
     ">
       {/* Left: plant identity + operational state */}
-      <div className="flex items-center gap-3">
-        <Typo level={5} className="text-slate-200 font-semibold tracking-wider uppercase">
-          IndusIntel
-        </Typo>
-        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-type-6 font-semibold ${STATE_BADGE_CLASS[operationalState]}`}>
-          {operationalState}
-        </span>
+      <div className="flex flex-col justify-center">
+        <div className="flex items-center gap-3">
+          <Typo level={5} className="text-slate-200 font-semibold tracking-wider uppercase">
+            IndusIntel
+          </Typo>
+          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-type-6 font-semibold ${STATE_BADGE_CLASS[operationalState]}`}>
+            {operationalState}
+          </span>
+        </div>
+        {operationalState !== "Normal" && (
+          <span className="text-[10px] italic text-slate-400 mt-0.5">Predictive risk state — no confirmed incident</span>
+        )}
       </div>
 
       {/* Center: active incident count & Global Search */}
@@ -63,12 +69,15 @@ export function GlobalStatusBar() {
         </div>
 
         {/* Demo Trigger */}
-        <button
-          onClick={() => window.location.reload()}
-          className="px-3 py-1 rounded bg-blue-600 text-white font-industrial text-xs hover:bg-blue-500 transition-colors"
-        >
-          Restart Demo
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.location.reload()}
+            className="px-3 py-1 rounded bg-blue-600 text-white font-industrial text-xs hover:bg-blue-500 transition-colors"
+          >
+            Restart Demo
+          </button>
+          <NotificationToggle />
+        </div>
 
         {/* Global Search (§12.2 Search Worker) */}
         <form onSubmit={handleSearch} className="flex items-center">
@@ -97,17 +106,80 @@ export function GlobalStatusBar() {
         </form>
       </div>
 
-      {/* Right: system health + clock */}
-      <div className="flex items-center gap-4">
+      {/* Right: system health + clocks */}
+      <div className="flex items-center gap-6">
         <StatusBadge
           status={infrastructureHealthy ? "Active" : "Unavailable"}
           variant="dot"
         />
-        <Typo level={6} className="tabular-nums text-slate-400">
-          <ClockDisplay />
-        </Typo>
+        <div className="flex items-center gap-4 border-l border-slate-700 pl-4">
+          <SimulatedTimeDisplay />
+          <Typo level={6} className="tabular-nums text-slate-400 flex flex-col items-end">
+            <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mb-0.5">Local Time</span>
+            <ClockDisplay />
+          </Typo>
+        </div>
       </div>
     </header>
+  );
+}
+
+/** Toggle button for switching Twilio notification mode between DRY RUN and LIVE. */
+function NotificationToggle() {
+  const [mode, setMode] = useState<"dry_run" | "live">("dry_run");
+  const [loading, setLoading] = useState(false);
+
+  const API_BASE = "http://localhost:8000";
+
+  React.useEffect(() => {
+    fetch(`${API_BASE}/api/notifications/mode`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.mode === "live" || data.mode === "dry_run") {
+          setMode(data.mode);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch notification mode:", err));
+  }, []);
+
+  const toggleMode = async () => {
+    const targetMode = mode === "dry_run" ? "live" : "dry_run";
+    setMode(targetMode); // Optimistic UI toggle immediately
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/notifications/mode`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: targetMode }),
+      });
+      const data = await res.json();
+      if (data.mode === "live" || data.mode === "dry_run") {
+        setMode(data.mode);
+      }
+    } catch (e) {
+      console.error("Failed to toggle notification mode", e);
+      setMode(mode); // Revert on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isLive = mode === "live";
+
+  return (
+    <button
+      onClick={toggleMode}
+      disabled={loading}
+      className={`px-3 py-1 rounded font-industrial text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+        isLive
+          ? "bg-red-600 hover:bg-red-500 text-white font-bold shadow-[0_0_10px_rgba(239,68,68,0.5)] border border-red-400"
+          : "bg-slate-700 hover:bg-slate-600 text-slate-300 border border-slate-600"
+      }`}
+      title={isLive ? "ARMED: Real Twilio WhatsApp & Voice Calls Active!" : "SAFE: Dry run mode, no calls dispatched"}
+    >
+      <span className={`w-2 h-2 rounded-full ${isLive ? "bg-white animate-pulse" : "bg-slate-400"}`} />
+      Notifications: {isLive ? "LIVE" : "DRY RUN"}
+    </button>
   );
 }
 
@@ -130,4 +202,28 @@ function ClockDisplay() {
   }, []);
 
   return <>{time.toLocaleTimeString()}</>;
+}
+
+/** Simulated plant time based on the latest streaming event timestamp. */
+function SimulatedTimeDisplay() {
+  const telemetry = useAllLatestTelemetry();
+  
+  const latestTimestamp = React.useMemo(() => {
+    if (!telemetry || telemetry.length === 0) return null;
+    let latest = 0;
+    for (const t of telemetry) {
+      if (t.timestamp) {
+        const dt = new Date(t.timestamp).getTime();
+        if (dt > latest) latest = dt;
+      }
+    }
+    return latest === 0 ? null : new Date(latest);
+  }, [telemetry]);
+
+  return (
+    <Typo level={6} className="tabular-nums text-slate-300 flex flex-col items-end">
+      <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mb-0.5">Plant Time</span>
+      <span>{latestTimestamp ? latestTimestamp.toLocaleTimeString() : "—"}</span>
+    </Typo>
+  );
 }

@@ -13,7 +13,7 @@ const SEVERITY_CONFIG: Record<IncidentSeverity, { label: string; icon: string; c
   Critical:      { label: "Critical",      icon: "◆", className: "bg-severity-critical text-white" },
   High:          { label: "High",          icon: "▲", className: "bg-severity-warning text-slate-900" },
   Medium:        { label: "Medium",        icon: "●", className: "bg-severity-advisory text-white" },
-  Low:           { label: "Low",           icon: "■", className: "bg-severity-normal text-slate-900" },
+  Low:           { label: "Low",           icon: "■", className: "bg-severity-advisory text-white" },
   Informational: { label: "Info",          icon: "○", className: "bg-severity-information text-white" },
 };
 

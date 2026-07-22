@@ -23,6 +23,7 @@ import { ingestTelemetryReading } from "@domain/telemetry/store";
 import { setServiceHealth } from "@domain/system-health/store";
 import { addCvDetection } from "@domain/future-cv/store";
 import { cacheKnowledgeRecord } from "@domain/future-rag/store";
+import { setEmergencyReport, addComplianceFinding } from "@domain/agent/store";
 
 import type { Camera, CameraId } from "@domain/camera/types";
 import type { Evidence, Incident, IncidentId, Recommendation } from "@domain/incident/types";
@@ -195,6 +196,19 @@ const ragAdapter: StoreAdapter = {
   },
 };
 
+const agentAdapter: StoreAdapter = {
+  applyEvent(event) {
+    if (event.entityType === "EmergencyReport") {
+      setEmergencyReport(event.payload as any);
+    } else if (event.entityType === "ComplianceFinding") {
+      addComplianceFinding(event.payload as any);
+    }
+  },
+  applySnapshot(_snapshot) {
+    // Bare-bones, no snapshot support needed for demo
+  },
+};
+
 export const STORE_ADAPTERS: Record<ServiceName, StoreAdapter> = {
   Camera: cameraAdapter,
   Incident: incidentAdapter,
@@ -205,4 +219,5 @@ export const STORE_ADAPTERS: Record<ServiceName, StoreAdapter> = {
   SystemHealth: systemHealthAdapter,
   CV: cvAdapter,
   RAG: ragAdapter,
+  Agent: agentAdapter,
 };

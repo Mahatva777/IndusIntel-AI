@@ -109,9 +109,41 @@ export class ResyncCoordinator {
     }
   }
 
+  private seenTimelineSignatures = new Set<string>();
+
   /** Apply an in-order batch of events to one service's store adapter (§4.17.2 "apply in order"). */
   applyOrdered(service: ServiceName, events: readonly EventEnvelope[]): void {
     const adapter = this.adapters[service];
-    for (const event of events) adapter.applyEvent(event);
+    for (const event of events) {
+      adapter.applyEvent(event);
+      
+      const payload = event.payload as any;
+      const majorTypes = ["Incident", "Agent"];
+      
+      if (payload && event.entityType && majorTypes.includes(event.entityType)) {
+        let signature = "";
+        
+        if (event.entityType === "Incident") {
+          signature = `Incident:${payload.id}:${payload.severity}:${payload.status}`;
+        } else if (event.entityType === "Agent") {
+          signature = `Agent:${payload.summary}`;
+        }
+        
+        if (signature && !this.seenTimelineSignatures.has(signature)) {
+          this.seenTimelineSignatures.add(signature);
+          
+          import("../ui-state/timeline/store").then(({ recordTimelineEvent }) => {
+            recordTimelineEvent({
+              id: event.eventId,
+              sequenceId: event.sequenceId,
+              entityType: event.entityType as any,
+              entityId: payload.id || event.eventId,
+              timestamp: event.timestamp,
+              payload: payload
+            } as any);
+          });
+        }
+      }
+    }
   }
 }

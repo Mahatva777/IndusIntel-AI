@@ -60,7 +60,9 @@ def _readings_of_type(
 
 
 class GasAccumulationRule:
-    """Fires when a toxic/flammable gas sensor breaches its warning band."""
+    """Fires when a toxic/flammable gas sensor breaches its warning band.
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
+    """
 
     rule_id = "SENSOR_GAS_ACCUMULATION"
 
@@ -111,7 +113,9 @@ class GasAccumulationRule:
 
 class OxygenDeficiencyRule:
     """Fires when O2 drops below warning/critical minimums; zones whose
-    hazard classification names a confined space get a severity multiplier."""
+    hazard classification names a confined space get a severity multiplier.
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
+    """
 
     rule_id = "SENSOR_OXYGEN_DEFICIENCY"
 
@@ -165,7 +169,9 @@ class OxygenDeficiencyRule:
 
 
 class ThermalAnomalyRule:
-    """Fires on coke-bed hotspot (IR spike) or tar-decanter over-temperature."""
+    """Fires on coke-bed hotspot (IR spike) or tar-decanter over-temperature.
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
+    """
 
     rule_id = "SENSOR_THERMAL_ANOMALY"
     _MONITORED_SENSORS = (_HOTSPOT_SENSOR_ID, _TAR_TEMP_SENSOR_ID)
@@ -213,6 +219,8 @@ class PressureSurgeRule:
     and breaching low (more negative, toward vacuum) are both detected by
     negating value/thresholds before reuse of the shared high-is-bad
     ``linear_severity`` helper.
+    
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
     """
 
     rule_id = "SENSOR_PRESSURE_SURGE"

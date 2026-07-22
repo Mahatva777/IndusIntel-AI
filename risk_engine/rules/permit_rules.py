@@ -74,7 +74,9 @@ def _gas_readings_in_zone(
 class ConfinedSpaceGasRule:
     """Fires when an active confined-space permit overlaps a rising gas
     reading in the same zone. The finding names both conditions together
-    because neither one alone is what makes this dangerous."""
+    because neither one alone is what makes this dangerous.
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
+    """
 
     rule_id = "PERMIT_CONFINED_SPACE_GAS"
 
@@ -135,7 +137,9 @@ class ConfinedSpaceGasRule:
 class HotWorkGasOverlapRule:
     """Fires when an active hot-work permit overlaps LEL exceeding the 10%
     danger threshold in the same zone -- an explosion precursor, so this
-    rule is deliberately calibrated to outrank every other single rule."""
+    rule is deliberately calibrated to outrank every other single rule.
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
+    """
 
     rule_id = "PERMIT_HOT_WORK_GAS_OVERLAP"
 
@@ -198,7 +202,9 @@ class SimultaneousPermitConflictRule:
     """Fires when two active permits in different zones both have rising
     gas readings at the same instant -- evidence the permit issuer spread
     high-risk work too thin to be monitored properly, independent of
-    what either permit's own risk looks like in isolation."""
+    what either permit's own risk looks like in isolation.
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
+    """
 
     rule_id = "PERMIT_SIMULTANEOUS_CONFLICT"
     _SEVERITY = 0.65

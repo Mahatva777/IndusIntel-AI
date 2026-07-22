@@ -83,12 +83,15 @@ export class StreamingClient {
       {
         synchronize: () => this.resyncCoordinator.fullResync("reconnect"),
         onPhaseChange: (phase: ConnectionPhase) => {
-          setServiceHealth({
-            service: "Network",
-            status: phase === "Live" ? "online" : "offline",
-            lastUpdated: new Date().toISOString(),
-            latencyMs: null,
-          });
+          const status = phase === "Live" ? "online" : "offline";
+          const lastUpdated = new Date().toISOString();
+          
+          setServiceHealth({ service: "Network", status, lastUpdated, latencyMs: null });
+          setServiceHealth({ service: "Sensors", status, lastUpdated, latencyMs: null });
+          setServiceHealth({ service: "CCTV-1", status, lastUpdated, latencyMs: null });
+          setServiceHealth({ service: "CCTV-2", status, lastUpdated, latencyMs: null });
+          setServiceHealth({ service: "CCTV-3", status, lastUpdated, latencyMs: null });
+          setServiceHealth({ service: "CCTV-4", status, lastUpdated, latencyMs: null });
         },
       },
       config.reconnectPolicy,

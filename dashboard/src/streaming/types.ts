@@ -25,6 +25,7 @@ export const SERVICE_NAMES = [
   "SystemHealth",
   "CV",
   "RAG",
+  "Agent",
 ] as const;
 
 export type ServiceName = (typeof SERVICE_NAMES)[number];
@@ -62,6 +63,7 @@ export const SERVICE_PRIORITY: Record<ServiceName, UpdatePriority> = {
   SystemHealth: "Low",
   CV: "Low",
   RAG: "Low",
+  Agent: "Low",
 };
 
 /**

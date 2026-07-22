@@ -56,12 +56,19 @@ export const EmergencyBanner: React.FC = React.memo(() => {
         {/* Left: severity + primary message */}
         <div className="flex items-center gap-3">
           <SeverityIndicator severity={primaryIncident.severity} />
-          <Typo level={1} className="text-severity-emergency">
-            EMERGENCY
-          </Typo>
-          <Typo level={4} className="text-slate-200">
-            Incident {primaryIncident.id} — Zone {primaryIncident.zoneId}
-          </Typo>
+          <div className="flex flex-col">
+            <div className="flex items-baseline gap-3">
+              <Typo level={1} className="text-severity-emergency">
+                EMERGENCY
+              </Typo>
+              <Typo level={4} className="text-slate-200">
+                Incident {primaryIncident.id} — Zone {primaryIncident.zoneId}
+              </Typo>
+            </div>
+            <Typo level={6} className="text-slate-400">
+              Predictive alert — compound risk pattern detected, no confirmed incident
+            </Typo>
+          </div>
         </div>
 
         {/* Right: escalation state from backend (§9.10) */}

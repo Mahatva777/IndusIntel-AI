@@ -57,6 +57,8 @@ class StatefulRule(Protocol):
     blur that distinction for no benefit. A RuleEngine that wants to
     drive stateful rules checks `isinstance(rule, StatefulRule)` and
     calls update() before evaluate(); pure rules never see update().
+    
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
     """
 
     rule_id: str
@@ -85,6 +87,8 @@ class GasRisingTrendRule:
     on the *trajectory* -- it catches acceleration, which is what tells
     an operator "this is going to breach critical soon" rather than
     "this already breached warning".
+    
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
     """
 
     rule_id = "TREND_GAS_RISING"
@@ -123,7 +127,7 @@ class GasRisingTrendRule:
     @staticmethod
     def _is_rising(window: Deque[_Sample]) -> bool:
         values = [s.value for s in window]
-        return all(b >= a for a, b in zip(values, values[1:]))
+        return values[-1] > values[0]
 
     @staticmethod
     def _make_fragment(sensor_id: str, cfg: SensorThresholds, window: Deque[_Sample]):
@@ -151,6 +155,7 @@ class GasRisingTrendRule:
                 f"first_value={first.value}",
                 f"last_value={last.value}",
                 f"rate_per_second={rate}",
+                f"critical_max={cfg.critical_max}",
             ),
         )
 
@@ -163,6 +168,8 @@ class RapidEscalationRule:
     (up-down-up-down but net far higher) would never satisfy the strict
     "every step non-decreasing" check above, yet is just as dangerous --
     this rule looks only at the net displacement across the window.
+    
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
     """
 
     rule_id = "TREND_RAPID_ESCALATION"
@@ -238,6 +245,8 @@ class SustainedWarningRule:
     ordinary noise; a sensor stuck in WARN signals the plant has settled
     into a genuinely abnormal steady state -- something no single-point
     check can distinguish from a transient blip.
+    
+    This agent independently inspects its domain and reports evidence without knowledge of other agents' findings.
     """
 
     rule_id = "TREND_SUSTAINED_WARNING"

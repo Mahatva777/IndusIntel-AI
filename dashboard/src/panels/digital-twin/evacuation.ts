@@ -37,11 +37,16 @@ function isSafe(severity: string | undefined): boolean {
   return !isUnsafe(severity);
 }
 
+function isExitTarget(zoneId: string): boolean {
+  const z = ZONES.find((z) => z.zone_id === zoneId);
+  if (!z) return zoneId.startsWith("exit");
+  return z.hazard_classification === "Safe" || z.parent_area === "External" || z.zone_id.startsWith("exit");
+}
+
 /**
  * BFS over ADJACENCY from `start`, refusing to enter any zone whose
- * severity is HIGH/CRITICAL, looking for the nearest zone (other than
- * `start` itself) whose severity is safe. Returns the hop path
- * (including `start` as the first element) or null if unreachable.
+ * severity is HIGH/CRITICAL, looking for the nearest safe exit/muster point.
+ * Returns the hop path (including `start` as the first element) or null.
  */
 function findNearestSafeZone(
   start: string,
@@ -54,7 +59,7 @@ function findNearestSafeZone(
     const path = queue.shift()!;
     const node = path[path.length - 1];
 
-    if (node !== start && isSafe(severities[node])) {
+    if (node !== start && isExitTarget(node) && isSafe(severities[node])) {
       return path;
     }
 

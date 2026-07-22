@@ -99,7 +99,7 @@ export function CCTVPanel() {
                 />
                 
                 <video
-                  src={`/cctv/Z${zoneId}_CAM_01.${zoneId === "1" || zoneId === "2" ? "mp4" : "mov"}`}
+                  src={`http://localhost:8000/cctv/Z${zoneId}_CAM_01.mp4`}
                   autoPlay
                   loop
                   muted

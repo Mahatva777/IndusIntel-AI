@@ -15,6 +15,7 @@ import { useLayoutState } from "../../shell/LayoutContext";
 import { useSelectionState } from "../../ui-state/selection/store";
 import { useDashboardStatus } from "../../derived/selectors";
 import { useOperatorActions } from "../../shared/hooks/useOperatorActions";
+import { useAgentEmergencyReport } from "../../domain/agent/store";
 import {
   SeverityIndicator,
   StatusBadge,
@@ -49,6 +50,26 @@ export function IncidentFocus() {
     dispatchResponse,
   } = useOperatorActions();
   const { selectedWorkerId } = useSelectionState();
+  const report = useAgentEmergencyReport();
+  
+  let projectionString = "";
+  if (report && report.alerts && focusedIncident) {
+    const mapZone = (id: string) => {
+      if (id === "1") return "zone-furnace-bay";
+      if (id === "2") return "zone-loading-dock";
+      if (id === "3") return "zone-compressor-room";
+      if (id === "4") return "zone-valve-gallery";
+      return id;
+    };
+    
+    const alertWithProj = report.alerts.find((a: any) => 
+      String(a.zone_id) === String(focusedIncident.zoneId) || 
+      mapZone(String(a.zone_id)) === String(focusedIncident.zoneId)
+    );
+    if (alertWithProj && alertWithProj.projection_string) {
+      projectionString = alertWithProj.projection_string;
+    }
+  }
 
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
@@ -104,18 +125,28 @@ export function IncidentFocus() {
       className={`flex flex-col h-full p-4 gap-4 focus:outline-none focus:ring-2 focus:ring-severity-advisory rounded-lg transition-opacity duration-300 ${isDimmed ? "opacity-30 pointer-events-none" : ""} ${!infrastructureHealthy ? "opacity-60 saturate-50" : ""}`}
     >
       {/* Header: severity + ID + priority badge */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <SeverityIndicator severity={focusedIncident.severity} />
-          <Typo level={2} className="text-slate-100 truncate" title={focusedIncident.name || focusedIncident.id}>
-            {focusedIncident.name || focusedIncident.id}
-          </Typo>
-          <Badge type="severity">{priority}</Badge>
+      <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-1 overflow-hidden">
+          <div className="flex items-center gap-3">
+            <SeverityIndicator severity={focusedIncident.severity} />
+            <Typo level={2} className="text-slate-100 truncate" title={focusedIncident.name || focusedIncident.id}>
+              {focusedIncident.name || focusedIncident.id}
+            </Typo>
+            <Badge type="severity">{priority}</Badge>
+          </div>
+          <span className="text-[10px] italic text-slate-400 ml-9">Predictive risk indicator — no casualty</span>
         </div>
         <StatusBadge
           status={focusedIncident.status === "Active" ? "Active" : "Resolved"}
         />
       </div>
+
+      {projectionString && (
+        <div className="text-cyan-400 text-sm font-semibold bg-cyan-900/20 p-2 rounded border border-cyan-800/50 flex items-center gap-2">
+          <span>⏱️</span>
+          <span>{projectionString}</span>
+        </div>
+      )}
 
       {/* Metrics row */}
       <div className="grid grid-cols-4 gap-3">

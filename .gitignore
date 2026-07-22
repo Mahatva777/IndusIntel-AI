@@ -1,1 +1,13 @@
 .venv
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+tests/
+test_api.py
+test_fusion.py
+test_stream.py
+test_validation.py
+risk_engine_output.txt
+
+cv_engine/.env
