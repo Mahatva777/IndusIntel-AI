@@ -1,11 +1,8 @@
-"""Minimal Knowledge Retriever for Incident Pattern Intelligence (risk_engine/rag.py).
+"""Knowledge Retriever for Incident Pattern Intelligence (risk_engine/rag.py).
 
-Intentionally minimal for a hackathon deadline. Provides a naive TF-IDF / substring
-scorer (acting as a stand-in for BM25/Vector DB) over a small, static corpus of 
-incident records and regulatory excerpts.
-
-This module is dependency-light and can be run without network access, matching the
-style of the rest of the risk_engine.
+Provides TF-IDF and keyword precedent matching over historical near-miss incident
+records and OISD / Factory Act regulatory corpora to attach precedent citations
+to compound risk alerts.
 """
 
 import csv

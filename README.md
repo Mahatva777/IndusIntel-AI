@@ -12,7 +12,7 @@ IndusIntel-AI is an **Agentic AI-powered Industrial Safety Intelligence platform
 - **Emergency Response Orchestrator**: An autonomous agent that, on confirmed trigger, immediately initiates evacuation protocols, aggregates active critical compound alerts across zones, preserves evidence, generates incident reports, and dispatches multi-channel alerts (Twilio WhatsApp with rich Markdown evidence formatting, plus automated TwiML Voice calls with text-to-speech).
 - **Control Plane & Safety Arming Mode**: A UI status bar control (`Notifications: DRY RUN` / `Notifications: LIVE`) and REST endpoint (`/api/notifications/mode`) allowing safety officers to arm/disarm live Twilio dispatches at runtime without touching `.env` or restarting services.
 - **Quality & Compliance Audit Agent**: An AI layer that continuously monitors safety procedures, inspection records, and statutory compliance documentation against regulatory standards (OISD, DGMS), autonomously generating corrective action workflows for missing gas tests or isolations.
-- **Computer Vision & CCTV Analytics**: Live looping camera feeds with CV pipelines to autonomously detect PPE compliance (helmet, vest, gloves) and unauthorized entry into restricted zones.
+- **Computer Vision & CCTV Analytics**: Custom-trained YOLOv26 deep learning pipeline (`cv_engine/`) running object detection on camera feeds to autonomously classify PPE compliance (helmet, vest, mask, gloves, shoes) and detect restricted zone boundary violations.
 
 ## 🏗 System Architecture
 
