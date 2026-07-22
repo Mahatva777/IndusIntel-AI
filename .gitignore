@@ -10,4 +10,4 @@ test_stream.py
 test_validation.py
 risk_engine_output.txt
 
-cv_engine/
+cv_engine/.env

@@ -10,12 +10,26 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 
+from pydantic import BaseModel
+
 from risk_engine.engine import RiskEngine
 from risk_engine.models import CompoundRiskAssessment, EvidenceFragment, RiskSeverityBand
 from risk_engine.alerts import Alert
 import risk_engine.agents as agents
 
 app = FastAPI(title="Risk Engine API")
+
+class NotificationModePayload(BaseModel):
+    mode: str
+
+@app.get("/api/notifications/mode")
+def get_notification_mode():
+    return {"mode": agents._notification_dispatcher.get_mode()}
+
+@app.post("/api/notifications/mode")
+def set_notification_mode(payload: NotificationModePayload):
+    updated_mode = agents._notification_dispatcher.set_mode(payload.mode)
+    return {"mode": updated_mode}
 
 outputs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "cv_engine", "outputs"))
 if os.path.exists(outputs_path):
@@ -123,6 +137,9 @@ async def stream_scenario(scenario_id: str):
         emitted_evidence = set()
         emitted_workers = set()
         emitted_permits = set()
+        
+        # Reset notification cooldowns when scenario stream restarts
+        agents._notification_dispatcher.reset_cooldown()
         
         # The frontend ConnectionManager takes a few microtasks to transition
         # from Connecting -> Authenticating -> Synchronizing -> Live after onopen.

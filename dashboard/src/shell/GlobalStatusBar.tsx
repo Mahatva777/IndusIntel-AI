@@ -69,12 +69,15 @@ export function GlobalStatusBar() {
         </div>
 
         {/* Demo Trigger */}
-        <button
-          onClick={() => window.location.reload()}
-          className="px-3 py-1 rounded bg-blue-600 text-white font-industrial text-xs hover:bg-blue-500 transition-colors"
-        >
-          Restart Demo
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.location.reload()}
+            className="px-3 py-1 rounded bg-blue-600 text-white font-industrial text-xs hover:bg-blue-500 transition-colors"
+          >
+            Restart Demo
+          </button>
+          <NotificationToggle />
+        </div>
 
         {/* Global Search (§12.2 Search Worker) */}
         <form onSubmit={handleSearch} className="flex items-center">
@@ -118,6 +121,65 @@ export function GlobalStatusBar() {
         </div>
       </div>
     </header>
+  );
+}
+
+/** Toggle button for switching Twilio notification mode between DRY RUN and LIVE. */
+function NotificationToggle() {
+  const [mode, setMode] = useState<"dry_run" | "live">("dry_run");
+  const [loading, setLoading] = useState(false);
+
+  const API_BASE = "http://localhost:8000";
+
+  React.useEffect(() => {
+    fetch(`${API_BASE}/api/notifications/mode`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.mode === "live" || data.mode === "dry_run") {
+          setMode(data.mode);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch notification mode:", err));
+  }, []);
+
+  const toggleMode = async () => {
+    const targetMode = mode === "dry_run" ? "live" : "dry_run";
+    setMode(targetMode); // Optimistic UI toggle immediately
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/notifications/mode`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: targetMode }),
+      });
+      const data = await res.json();
+      if (data.mode === "live" || data.mode === "dry_run") {
+        setMode(data.mode);
+      }
+    } catch (e) {
+      console.error("Failed to toggle notification mode", e);
+      setMode(mode); // Revert on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isLive = mode === "live";
+
+  return (
+    <button
+      onClick={toggleMode}
+      disabled={loading}
+      className={`px-3 py-1 rounded font-industrial text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+        isLive
+          ? "bg-red-600 hover:bg-red-500 text-white font-bold shadow-[0_0_10px_rgba(239,68,68,0.5)] border border-red-400"
+          : "bg-slate-700 hover:bg-slate-600 text-slate-300 border border-slate-600"
+      }`}
+      title={isLive ? "ARMED: Real Twilio WhatsApp & Voice Calls Active!" : "SAFE: Dry run mode, no calls dispatched"}
+    >
+      <span className={`w-2 h-2 rounded-full ${isLive ? "bg-white animate-pulse" : "bg-slate-400"}`} />
+      Notifications: {isLive ? "LIVE" : "DRY RUN"}
+    </button>
   );
 }
 

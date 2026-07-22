@@ -6,7 +6,7 @@ export interface EmergencyReport {
   summary: string;
   affected_zones: string[];
   alerts: any[];
-  notifications_dispatched?: string[];
+  notifications_dispatched?: any[];
 }
 
 export interface ComplianceFinding {

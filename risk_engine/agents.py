@@ -23,12 +23,15 @@ from typing import Mapping
 
 from risk_engine.alerts import PlantEmergencyAlert
 from risk_engine.context import PlantSnapshot, ZoneContext
+from risk_engine.notifications import NotificationDispatcher
 from risk_engine.rules.permit_rules import (
     ConfinedSpaceGasRule,
     HotWorkGasOverlapRule,
     SimultaneousPermitConflictRule,
 )
 from risk_engine.rules.sensor_rules import SensorThresholds
+
+_notification_dispatcher = NotificationDispatcher()
 
 
 def emergency_response(emergency: PlantEmergencyAlert) -> dict:
@@ -88,19 +91,56 @@ def emergency_response(emergency: PlantEmergencyAlert) -> dict:
             zone_dict["projection_string"] = projection_string
             
         zone_alerts.append(zone_dict)
+
+    affected_zones = sorted(list(set(a.zone_id for a in emergency.zone_alerts)))
+    zones_str = ", ".join(f"Zone {z}" for z in affected_zones) if affected_zones else "all zones"
+
+    # Spoken voice message (clear text-to-speech for phone call)
+    voice_msg = (
+        f"Attention Safety Officer. Plant Emergency Alert. "
+        f"Critical compound risk detected in {zones_str}. "
+        f"Immediate coordinated response required. "
+        f"Please check the IndusIntel emergency dashboard immediately."
+    )
+
+    # Detailed WhatsApp message with evidence, projections, and recommended actions
+    wa_lines = [
+        "🚨 *INDUSINTEL SAFETY EMERGENCY ALERT*",
+        f"*Status:* CRITICAL Compound Risk Detected",
+        f"*Affected Zones:* {zones_str}",
+        "",
+        "📍 *ZONE STATUS & PRESERVED EVIDENCE:*",
+    ]
+    for zd in zone_alerts:
+        z_id = zd["zone_id"]
+        wa_lines.append(f"• *Zone {z_id}: {zd['title']}*")
+        wa_lines.append(f"  - *Condition:* {zd['explanation']}")
+        if zd.get("projection_string"):
+            wa_lines.append(f"  - ⏱️ *Projection:* {zd['projection_string']}")
+        
+        evidences = zd.get("preserved_evidence", [])
+        if evidences:
+            findings = [e["finding"] for e in evidences[:2]]
+            wa_lines.append(f"  - 🔍 *Key Evidence:* {'; '.join(findings)}")
+        
+        wa_lines.append(f"  - ⚠️ *Action:* {zd['recommended_action']}")
+        wa_lines.append("")
+
+    wa_lines.append("🛡️ *Guidance:* Predictive risk indicator — no casualties confirmed.")
+    wa_lines.append("_Generated automatically by IndusIntel Emergency Response Orchestrator._")
+
+    whatsapp_msg = "\n".join(wa_lines)
+
+    wa_result = _notification_dispatcher.send_whatsapp_alert(whatsapp_msg)
+    voice_result = _notification_dispatcher.place_voice_call(voice_msg)
         
     return {
         "disclaimer": "This is a predictive alert generated from correlated sensor, permit, and equipment evidence. It indicates elevated compound risk conditions, not a confirmed injury, fatality, or equipment failure.",
         "timestamp": emergency.timestamp,
-        "affected_zones": list(set(a.zone_id for a in emergency.zone_alerts)),
+        "affected_zones": affected_zones,
         "summary": emergency.summary,
         "alerts": zone_alerts,
-        # Demo stub only: no real notification service exists yet
-        "notifications_dispatched": [
-            "safety_officer_sms",
-            "shift_supervisor_email",
-            "plant_manager_dashboard"
-        ],
+        "notifications_dispatched": [wa_result, voice_result],
     }
 
 

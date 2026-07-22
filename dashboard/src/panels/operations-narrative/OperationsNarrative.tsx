@@ -56,9 +56,40 @@ export function OperationsNarrative() {
               </div>
             ))}
             {report.notifications_dispatched && report.notifications_dispatched.length > 0 && (
-              <div className="mt-4 text-xs text-slate-400 border-t border-slate-700 pt-2">
-                <em className="text-slate-300 font-semibold mb-1 block">Dispatched Notifications (Multi-Channel):</em>
-                {report.notifications_dispatched.join(", ")}
+              <div className="mt-4 text-xs text-slate-400 border-t border-slate-700 pt-3">
+                <em className="text-slate-300 font-semibold mb-2 block">Dispatched Notifications (Multi-Channel):</em>
+                <div className="flex flex-wrap gap-2">
+                  {report.notifications_dispatched.map((item: any, idx: number) => {
+                    if (typeof item === "string") {
+                      return <span key={idx} className="text-slate-400">• {item}</span>;
+                    }
+                    const channel = item.channel === "whatsapp" ? "📱 WhatsApp" : item.channel === "voice" ? "☎️ Voice Call" : (item.channel || "Channel");
+                    
+                    let statusLabel = "";
+                    let badgeColor = "text-slate-400 bg-slate-800 border-slate-700";
+
+                    if (item.status === "skipped_cooldown") {
+                      statusLabel = "skipped (cooldown active)";
+                      badgeColor = "text-amber-400 bg-amber-950/40 border-amber-800/60";
+                    } else if (item.status === "failed") {
+                      statusLabel = `failed (${item.error || "error"})`;
+                      badgeColor = "text-red-400 bg-red-950/40 border-red-800/60";
+                    } else if (item.dry_run) {
+                      statusLabel = "dry run — not sent";
+                      badgeColor = "text-sky-400 bg-sky-950/40 border-sky-800/60";
+                    } else {
+                      statusLabel = `LIVE SENT (SID: ${item.sid ? item.sid.slice(0, 8) + "..." : "ok"})`;
+                      badgeColor = "text-emerald-400 bg-emerald-950/40 border-emerald-800/60 font-semibold";
+                    }
+
+                    return (
+                      <div key={idx} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs border ${badgeColor}`}>
+                        <span className="font-semibold">{channel}:</span>
+                        <span>{statusLabel}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
