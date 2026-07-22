@@ -31,6 +31,19 @@ def set_notification_mode(payload: NotificationModePayload):
     updated_mode = agents._notification_dispatcher.set_mode(payload.mode)
     return {"mode": updated_mode}
 
+@app.post("/api/action/{action_name}")
+def handle_operator_action(action_name: str, payload: dict = None):
+    return {
+        "status": "ok",
+        "action": action_name,
+        "newIncidentId": f"inc-{uuid.uuid4().hex[:6]}",
+        "timestamp": time.time()
+    }
+
+@app.post("/debug/error")
+def handle_debug_error(payload: dict = None):
+    return {"status": "logged"}
+
 outputs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "cv_engine", "outputs"))
 if os.path.exists(outputs_path):
     app.mount("/cctv", StaticFiles(directory=outputs_path), name="cctv")

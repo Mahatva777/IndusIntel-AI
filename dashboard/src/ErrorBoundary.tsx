@@ -15,7 +15,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     return { hasError: true, error };
   }
   componentDidCatch(error: Error, _info: React.ErrorInfo) {
-    fetch('http://localhost:8081/debug/error', {
+    fetch('http://localhost:8000/debug/error', {
       method: 'POST',
       body: JSON.stringify({ message: error.message, stack: error.stack })
     }).catch(console.error);

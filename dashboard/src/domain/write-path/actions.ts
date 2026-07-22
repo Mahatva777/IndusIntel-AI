@@ -3,7 +3,7 @@ import { ROLE_HIERARCHY, BackendError } from "./types";
 import type { IncidentId, PermitId, WorkerId } from "../../types/ids";
 
 async function doFetch(url: string, correlationId: string, payload: unknown) {
-  const res = await fetch(`http://localhost:8081/api/action/${url}`, {
+  const res = await fetch(`http://localhost:8000/api/action/${url}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
