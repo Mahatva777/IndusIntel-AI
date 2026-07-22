@@ -130,8 +130,9 @@ def emergency_response(emergency: PlantEmergencyAlert) -> dict:
     wa_lines.append("_Generated automatically by IndusIntel Emergency Response Orchestrator._")
 
     whatsapp_msg = "\n".join(wa_lines)
+    if len(whatsapp_msg) > 1500:
+        whatsapp_msg = whatsapp_msg[:1497] + "..."
 
-    _notification_dispatcher.reset_cooldown()
     wa_result = _notification_dispatcher.send_whatsapp_alert(whatsapp_msg)
     voice_result = _notification_dispatcher.place_voice_call(voice_msg)
         
