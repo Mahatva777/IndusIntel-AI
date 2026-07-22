@@ -150,8 +150,8 @@ The **Alert Manager** applies cooldowns to prevent noise and statefully escalate
 
 1. **Run the Backend (Risk Engine)**
    ```bash
-   cd risk_engine
-   python3 -m uvicorn api:app --reload
+   # Make sure you are in the root directory (ET)
+   python -m uvicorn risk_engine.api:app --reload
    ```
 
 2. **Run the Frontend (Dashboard)**
@@ -161,11 +161,5 @@ The **Alert Manager** applies cooldowns to prevent noise and statefully escalate
    npm run dev
    ```
 
-3. **Run the Mock Server (if applicable)**
-   ```bash
-   cd dashboard/mock-server
-   npm start
-   ```
-
-4. **View the Dashboard**
+3. **View the Dashboard**
    Open your browser to `http://localhost:5173`. The mock risk engine will immediately begin streaming telemetry and incidents.

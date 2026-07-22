@@ -98,13 +98,15 @@ def permit_intelligence_summary(
     return tuple(findings)
 
 
-def compliance_check(zone: ZoneContext) -> tuple[str, ...]:
-    """Standalone function to audit active permits for missing flags.
+def compliance_check(zone: ZoneContext) -> tuple[dict, ...]:
+    """Standalone function to audit active permits for missing flags and unpermitted workers.
     
     This must not affect risk scoring or alerting -- it's a separate
     audit signal.
     """
     findings = []
+    
+    # 1. Audit active permits for missing procedural flags
     for permit in zone.active_permits:
         missing = []
         if not permit.gas_test_completed:
@@ -122,11 +124,8 @@ def compliance_check(zone: ZoneContext) -> tuple[str, ...]:
             action = action_map.get(missing_str, "Halt work and review permit.")
             finding_str = f"Permit {permit.permit_id} missing {missing_str}"
             
-            # Use KnowledgeRetriever for regulation reference
-            from risk_engine.rag import KnowledgeRetriever
-            # Note: A real app would inject this or use a singleton; creating here for demo simplicity,
-            # or we could memoize it. Let's memoize it quickly.
             if not hasattr(compliance_check, "_retriever"):
+                from risk_engine.rag import KnowledgeRetriever
                 compliance_check._retriever = KnowledgeRetriever()
                 
             precedents = compliance_check._retriever.retrieve(finding_str)
@@ -136,5 +135,28 @@ def compliance_check(zone: ZoneContext) -> tuple[str, ...]:
                 "corrective_action": action,
                 "regulation_reference": precedents
             })
+
+    # 2. Audit unpermitted workers in permit-required zones
+    if zone.permit_required and zone.workers_present:
+        authorized_ids = set()
+        for permit in zone.active_permits:
+            authorized_ids.update(permit.workers_assigned)
+        unpermitted = [w.worker_id for w in zone.workers_present if w.worker_id not in authorized_ids]
+        if unpermitted:
+            workers_str = ", ".join(unpermitted)
+            finding_str = f"Worker(s) {workers_str} present in Zone {zone.zone_id} without an active permit"
+            action = f"Escort worker(s) {workers_str} out of Zone {zone.zone_id} immediately or issue required permit prior to entry."
             
+            if not hasattr(compliance_check, "_retriever"):
+                from risk_engine.rag import KnowledgeRetriever
+                compliance_check._retriever = KnowledgeRetriever()
+                
+            precedents = compliance_check._retriever.retrieve(finding_str)
+            
+            findings.append({
+                "finding": finding_str,
+                "corrective_action": action,
+                "regulation_reference": precedents
+            })
+
     return tuple(findings)

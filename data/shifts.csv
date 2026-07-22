@@ -1,2 +1,2 @@
 shift_id,shift_name,supervisor,workers,handover_notes,start,end
-S1,Day Shift,Shift Safety Officer,W001;W002;W003;W004,"All ovens on normal schedule, maintenance planned in Tar area",2026-07-15T08:00:00,2026-07-15T16:00:00
+S1,Day Shift,Shift Safety Officer,W001;W002;W003;W004;W005;W006;W007;W008;W009,"All ovens on normal schedule, maintenance planned in Tar area",2026-07-15T08:00:00,2026-07-15T16:00:00

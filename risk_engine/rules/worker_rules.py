@@ -47,7 +47,7 @@ _GAS_SENSOR_TYPES = frozenset(
 _SCBA_KEYWORD = "scba"
 _RESPIRATOR_KEYWORD = "respirator"
 _BASELINE_PPE_LEVEL = 2  # any permit-worthy zone requires at least basic PPE
-_UNAUTHORIZED_ENTRY_SEVERITY = 0.75
+_UNAUTHORIZED_ENTRY_SEVERITY = 0.15
 
 
 def _ppe_level_number(raw: str) -> Optional[int]:

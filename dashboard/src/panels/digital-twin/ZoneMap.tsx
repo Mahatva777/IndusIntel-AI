@@ -62,7 +62,7 @@ export interface ZoneMapProps {
 
 // Flat, discrete severity palette. No interpolation between these values.
 const SEVERITY_COLORS: Record<SeverityBand, { bg: string; fg: string; border: string }> = {
-  LOW: { bg: "#1F6F4A", fg: "#EAF6EF", border: "#2E8F60" },
+  LOW: { bg: "#1E40AF", fg: "#DBEAFE", border: "#2563EB" }, // Blue mapping
   MEDIUM: { bg: "#8A6A12", fg: "#FBF3DD", border: "#B08A1C" },
   HIGH: { bg: "#8A3B12", fg: "#FBEADD", border: "#B0521C" },
   CRITICAL: { bg: "#7A1F1F", fg: "#FBE3E3", border: "#A62C2C" },
@@ -268,7 +268,7 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
   const [openPermitZoneId, setOpenPermitZoneId] = useState<string | null>(null);
 
   // Pan state
-  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [pan, setPan] = useState({ x: 260, y: 150 });
   const [isPanning, setIsPanning] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
@@ -412,6 +412,7 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
             left: 0,
             width: "100%",
             height: "100%",
+            overflow: "visible",
             pointerEvents: "none",
           }}
         >

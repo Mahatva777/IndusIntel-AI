@@ -125,7 +125,6 @@ export function DigitalTwinPanel() {
               severities={severities}
               workers={workers}
               permits={permits}
-              containerWidth={containerWidth}
             >
               {knownWorkerZones.map((zoneId) => {
                 const result = computeEvacuation(zoneId, severities);

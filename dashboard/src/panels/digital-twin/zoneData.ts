@@ -69,16 +69,82 @@ export const ZONES: Zone[] = [
     permit_required: "None",
     evacuation_route: "Safe Zone",
     layout: { x: 300, y: 900, width: 300, height: 60 },
+  },
+  {
+    zone_id: "exit-z5",
+    name: "Coal Yard",
+    parent_area: "External",
+    hazard_classification: "Safe",
+    ppe_required: "None",
+    permit_required: "None",
+    evacuation_route: "Safe Zone",
+    layout: { x: -250, y: 50, width: 250, height: 60 },
+  },
+  {
+    zone_id: "exit-z6",
+    name: "Coal Tower",
+    parent_area: "External",
+    hazard_classification: "Safe",
+    ppe_required: "None",
+    permit_required: "None",
+    evacuation_route: "Safe Zone",
+    layout: { x: 200, y: -50, width: 250, height: 60 },
+  },
+  {
+    zone_id: "exit-z7",
+    name: "CDCP & Wharf",
+    parent_area: "External",
+    hazard_classification: "Safe",
+    ppe_required: "None",
+    permit_required: "None",
+    evacuation_route: "Safe Zone",
+    layout: { x: 800, y: 50, width: 250, height: 60 },
+  },
+  {
+    zone_id: "exit-z8",
+    name: "Gas Holder",
+    parent_area: "External",
+    hazard_classification: "Safe",
+    ppe_required: "None",
+    permit_required: "None",
+    evacuation_route: "Safe Zone",
+    layout: { x: 1100, y: 550, width: 250, height: 60 },
+  },
+  {
+    zone_id: "exit-z9",
+    name: "Control Room",
+    parent_area: "External",
+    hazard_classification: "Safe",
+    ppe_required: "None",
+    permit_required: "None",
+    evacuation_route: "Safe Zone",
+    layout: { x: 0, y: 800, width: 250, height: 60 },
+  },
+  {
+    zone_id: "exit-z10",
+    name: "Tar Tank Farm",
+    parent_area: "External",
+    hazard_classification: "Safe",
+    ppe_required: "None",
+    permit_required: "None",
+    evacuation_route: "Safe Zone",
+    layout: { x: 600, y: 1000, width: 250, height: 60 },
   }
 ];
 
 export const ADJACENCY: Record<string, string[]> = {
-  "zone-furnace-bay": ["zone-loading-dock", "zone-compressor-room", "exit-north"],
-  "zone-loading-dock": ["zone-furnace-bay", "zone-compressor-room", "zone-valve-gallery", "exit-north", "exit-south"],
-  "zone-compressor-room": ["zone-furnace-bay", "zone-loading-dock", "zone-valve-gallery", "exit-south"],
-  "zone-valve-gallery": ["zone-loading-dock", "zone-compressor-room", "exit-south"],
+  "zone-furnace-bay": ["exit-north", "exit-z5", "exit-z6", "zone-loading-dock", "zone-compressor-room"],
+  "zone-loading-dock": ["exit-north", "exit-south", "exit-z7", "zone-furnace-bay", "zone-compressor-room", "zone-valve-gallery"],
+  "zone-compressor-room": ["exit-south", "exit-z9", "zone-furnace-bay", "zone-loading-dock", "zone-valve-gallery"],
+  "zone-valve-gallery": ["exit-south", "exit-z10", "exit-z8", "zone-loading-dock", "zone-compressor-room"],
   "exit-north": ["zone-furnace-bay", "zone-loading-dock"],
   "exit-south": ["zone-valve-gallery", "zone-compressor-room", "zone-loading-dock"],
+  "exit-z5": ["zone-furnace-bay", "exit-z6", "exit-z9"],
+  "exit-z6": ["zone-furnace-bay", "exit-z5", "exit-z7"],
+  "exit-z7": ["zone-loading-dock", "exit-z6", "exit-z8"],
+  "exit-z8": ["zone-valve-gallery", "exit-z7", "exit-z10"],
+  "exit-z9": ["zone-compressor-room", "exit-z10", "exit-z5"],
+  "exit-z10": ["zone-valve-gallery", "exit-z8", "exit-z9"],
 };
 
 export const EDGE_CONFIDENCE: Record<string, "high" | "medium" | "low"> = {
@@ -92,6 +158,22 @@ export const EDGE_CONFIDENCE: Record<string, "high" | "medium" | "low"> = {
   "zone-valve-gallery-exit-south": "high",
   "zone-compressor-room-exit-south": "high",
   "zone-loading-dock-exit-south": "low",
+  
+  // Stub zone edges (all low confidence for dashed lines)
+  "zone-furnace-bay-exit-z5": "low",
+  "zone-furnace-bay-exit-z6": "low",
+  "zone-loading-dock-exit-z7": "low",
+  "zone-compressor-room-exit-z9": "low",
+  "zone-valve-gallery-exit-z8": "low",
+  "zone-valve-gallery-exit-z10": "low",
+  
+  // Ring edges
+  "exit-z5-exit-z6": "low",
+  "exit-z6-exit-z7": "low",
+  "exit-z7-exit-z8": "low",
+  "exit-z8-exit-z10": "low",
+  "exit-z10-exit-z9": "low",
+  "exit-z9-exit-z5": "low",
 };
 
 export function getZoneName(zoneId: string): string {

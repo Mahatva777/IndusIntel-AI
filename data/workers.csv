@@ -1,5 +1,10 @@
 worker_id,name,role,qualification,ppe_level,rfid_tag,current_zone,shift_id,medical_status,emergency_contact
 W001,Shift Safety Officer,Safety Officer,BE Metallurgy,Level 3,TAG-W001,1,S1,FIT,ICE-1
-W002,Basement Technician,Gas Valve Technician,ITI Fitter,Level 4,TAG-W002,3,S1,FIT,ICE-2
-W003,Tar Operator,Tar Plant Operator,Diploma Chemical,Level 3,TAG-W003,4,S1,FIT,ICE-3
+W005,Furnace Tech,Furnace Technician,Diploma Metallurgy,Level 3,TAG-W005,1,S1,FIT,ICE-5
 W004,Quench Operator,Quench Car Operator,ITI Operator,Level 2,TAG-W004,2,S1,FIT,ICE-4
+W006,Track Assistant,Track Assistant,ITI Mechanical,Level 2,TAG-W006,2,S1,FIT,ICE-6
+W002,Basement Technician,Gas Valve Technician,ITI Fitter,Level 4,TAG-W002,3,S1,FIT,ICE-2
+W007,Valve Inspector,Valve Technician,Diploma Mechanical,Level 4,TAG-W007,3,S1,FIT,ICE-7
+W003,Tar Operator,Tar Plant Operator,Diploma Chemical,Level 3,TAG-W003,4,S1,FIT,ICE-3
+W008,Tar Maintenance Lead,Maintenance Lead,BE Mechanical,Level 3,TAG-W008,4,S1,FIT,ICE-8
+W009,Chemical Technician,Chemical Tech,BSc Chemistry,Level 3,TAG-W009,4,S1,FIT,ICE-9
