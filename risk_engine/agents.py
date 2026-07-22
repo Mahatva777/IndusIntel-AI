@@ -147,14 +147,10 @@ def emergency_response(emergency: PlantEmergencyAlert) -> dict:
 def permit_intelligence_summary(
     snapshot: PlantSnapshot, thresholds: Mapping[str, SensorThresholds]
 ) -> tuple[str, ...]:
-    """Thin wrapper that calls the existing permit conflict rules.
+    """Digital Permit Intelligence Agent interface.
     
-    Exists purely to give the permit-conflict detection a named "agent"
-    entry point for the demo narrative. Reuses existing rule logic.
-    
-    Note: The signature takes `snapshot` and `thresholds` instead of
-    just `zone` because the underlying `.evaluate()` logic requires the
-    full PlantSnapshot to resolve cross-zone conflicts.
+    Evaluates active permits against cross-zone telemetry, hot-work overlap,
+    and simultaneous operation (SIMOPS) rules to generate risk findings.
     """
     rules = [
         ConfinedSpaceGasRule(thresholds),
