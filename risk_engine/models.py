@@ -150,12 +150,10 @@ class CompoundRiskAssessment:
 
 
 # ============================================================
-# CV INGESTION CONTRACT (STUB)
+# CV INGESTION CONTRACT
 # ============================================================
-# The CV model does not exist yet. This section IS the contract it must
-# satisfy. Build your pipeline against this shape (or emit JSON that
-# trivially converts to it) so the rest of the Risk Engine never has to
-# change when your CV internals do -- this is an anti-corruption layer.
+# Defines data models for Computer Vision (PPE detection and restricted zone
+# events) produced by cv_engine/ inference outputs.
 
 class PPEItem(Enum):
     """The 5-class PPE vocabulary the CV model should detect.
@@ -202,7 +200,7 @@ class CVEventType(Enum):
 
 @dataclass(slots=True, frozen=True)
 class BoundingBox:
-    """A normalized (0.0-1.0) bounding box; stubbed for future overlay/debug use."""
+    """A normalized (0.0-1.0) bounding box for spatial object localization."""
 
     x: float
     y: float

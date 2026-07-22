@@ -1,7 +1,7 @@
 """Computer-vision rules for the Risk Engine (risk_engine/rules/cv_rules.py).
 
 ============================================================================
-CV PIPELINE INTEGRATION -- YOLOv8 ENGINE
+CV PIPELINE INTEGRATION -- YOLOv26 ENGINE
 ============================================================================
 The CV model is implemented in cv_engine/ (inference.py, models/best.pt).
 This module provides rules evaluating PPE detections and restricted-zone
@@ -52,14 +52,11 @@ entry events emitted into PlantSnapshot.cv_ppe_detections / snapshot.cv_events.
    relative to frame width/height, since it costs you nothing now and
    saves the dashboard team a re-integration later.
 
-5. WHAT THIS MODULE DOES UNTIL YOU EXIST
+5. EVALUATION LOGIC
    ----------------------------------------
-   Every rule below checks its input collection first and returns an
-   empty tuple if it's empty. That is the *normal*, expected state of
-   this module today -- PlantSnapshot.cv_ppe_detections and
-   PlantSnapshot.cv_events default to () everywhere upstream. The moment
-   SnapshotBuilder starts populating them from your pipeline, fragments
-   start flowing with no changes here.
+   Every rule evaluates input collections (PlantSnapshot.cv_ppe_detections
+   and PlantSnapshot.cv_events) to emit EvidenceFragments for PPE breaches
+   and unauthorized zone access.
 ============================================================================
 """
 
