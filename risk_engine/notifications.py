@@ -66,7 +66,7 @@ class NotificationDispatcher:
       - DISPATCH_MODE ("dry_run" or "live", default: "dry_run")
     """
 
-    def __init__(self, dispatch_cooldown_seconds: float = 120.0) -> None:
+    def __init__(self, dispatch_cooldown_seconds: float = 5.0) -> None:
         self.cooldown_seconds = dispatch_cooldown_seconds
         self._last_dispatch: Dict[str, float] = {}
         self._last_result: Dict[str, Dict[str, Any]] = {}

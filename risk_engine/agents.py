@@ -131,6 +131,7 @@ def emergency_response(emergency: PlantEmergencyAlert) -> dict:
 
     whatsapp_msg = "\n".join(wa_lines)
 
+    _notification_dispatcher.reset_cooldown()
     wa_result = _notification_dispatcher.send_whatsapp_alert(whatsapp_msg)
     voice_result = _notification_dispatcher.place_voice_call(voice_msg)
         
